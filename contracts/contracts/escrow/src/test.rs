@@ -1,0 +1,66 @@
+#![cfg(test)]
+
+use super::*;
+use soroban_sdk::{testutils::{Address as _, MockAuth, MockAuthInvoke}, token, Address, Env, IntoVal};
+
+fn create_token_contract<'a>(env: &Env, admin: &Address) -> token::StellarAssetClient<'a> {
+    let contract_id = env.register_stellar_asset_contract(admin.clone());
+    token::StellarAssetClient::new(env, &contract_id)
+}
+
+#[test]
+fn test_escrow_flow() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let client = Address::generate(&env);
+    let freelancer = Address::generate(&env);
+    
+    // Set up token
+    let token_admin = Address::generate(&env);
+    let token_client = create_token_contract(&env, &token_admin);
+    let token_id = token_client.address.clone();
+    
+    // Mint 1000 tokens to client
+    token_client.mint(&client, &1000);
+    assert_eq!(token::Client::new(&env, &token_id).balance(&client), 1000);
+
+    // Deploy Escrow Contract
+    let contract_id = env.register_contract(None, TrustPayEscrow);
+    let escrow_client = TrustPayEscrowClient::new(&env, &contract_id);
+
+    // 1. Create Escrow
+    let amount: i128 = 500;
+    let escrow_id = escrow_client.create_escrow(&client, &freelancer, &amount, &token_id);
+    assert_eq!(escrow_id, 1);
+
+    let mut escrow = escrow_client.get_escrow(&escrow_id);
+    assert_eq!(escrow.status, EscrowStatus::Created);
+
+    // 2. Deposit Funds
+    escrow_client.deposit(&escrow_id);
+    
+    // Verify funds moved from client to contract
+    let token_c = token::Client::new(&env, &token_id);
+    assert_eq!(token_c.balance(&client), 500);
+    assert_eq!(token_c.balance(&contract_id), 500);
+    
+    escrow = escrow_client.get_escrow(&escrow_id);
+    assert_eq!(escrow.status, EscrowStatus::Funded);
+
+    // 3. Accept Escrow
+    escrow_client.accept(&escrow_id);
+    
+    escrow = escrow_client.get_escrow(&escrow_id);
+    assert_eq!(escrow.status, EscrowStatus::Accepted);
+
+    // 4. Release Funds
+    escrow_client.release(&escrow_id);
+
+    // Verify funds moved from contract to freelancer
+    assert_eq!(token_c.balance(&contract_id), 0);
+    assert_eq!(token_c.balance(&freelancer), 500);
+
+    escrow = escrow_client.get_escrow(&escrow_id);
+    assert_eq!(escrow.status, EscrowStatus::Released);
+}
