@@ -107,12 +107,24 @@ export const Dashboard: React.FC = () => {
         
         <div className="p-8 text-center text-slate-500">
           {queriedEscrow ? (
-            <div className="text-left bg-slate-50 p-4 rounded-xl border border-slate-200 inline-block w-full max-w-xl">
-              <h3 className="font-bold text-slate-900 mb-2">Escrow #{queriedEscrow.id?.toString()}</h3>
-              <p>Client: {queriedEscrow.client}</p>
-              <p>Freelancer: {queriedEscrow.freelancer}</p>
-              <p>Status: {Object.keys(queriedEscrow.status || {})[0]}</p>
-              <p>Amount: {(Number(queriedEscrow.amount) / 10000000).toFixed(2)} XLM</p>
+            <div className="text-left bg-slate-50 p-6 rounded-xl border border-slate-200 inline-block w-full max-w-xl">
+              <div className="flex justify-between items-start mb-4">
+                <h3 className="font-bold text-slate-900 text-xl">Escrow #{queriedEscrow.id?.toString()}</h3>
+                <span className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-xs font-semibold">
+                  {Object.keys(queriedEscrow.status || {})[0]}
+                </span>
+              </div>
+              <div className="space-y-2 mb-6">
+                <p className="text-sm"><span className="font-medium text-slate-500">Client:</span> <span className="font-mono">{queriedEscrow.client}</span></p>
+                <p className="text-sm"><span className="font-medium text-slate-500">Freelancer:</span> <span className="font-mono">{queriedEscrow.freelancer}</span></p>
+                <p className="text-sm"><span className="font-medium text-slate-500">Amount:</span> <span className="font-semibold text-slate-900">{(Number(queriedEscrow.amount) / 10000000).toFixed(2)} XLM</span></p>
+              </div>
+              <Link 
+                to={`/escrow/${queriedEscrow.id?.toString()}`}
+                className="w-full block text-center bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 rounded-lg transition-colors"
+              >
+                Manage Escrow &rarr;
+              </Link>
             </div>
           ) : (
             "No escrows found. Please search by ID or create a new one."

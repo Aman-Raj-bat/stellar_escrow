@@ -6,6 +6,7 @@ import { LandingPage } from './pages/LandingPage';
 
 import { Dashboard } from './pages/Dashboard';
 import { CreateEscrow } from './pages/CreateEscrow';
+import { EscrowDetail } from './pages/EscrowDetail';
 
 export const App: React.FC = () => {
   return (
@@ -16,6 +17,7 @@ export const App: React.FC = () => {
             <Route index element={<LandingPage />} />
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="escrow/create" element={<CreateEscrow />} />
+            <Route path="escrow/:id" element={<EscrowDetail />} />
           </Route>
         </Routes>
       </BrowserRouter>
