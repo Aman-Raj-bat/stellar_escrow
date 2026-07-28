@@ -4,6 +4,7 @@ import { useWallet } from '../store/WalletContext';
 import { useEscrow } from '../hooks/useEscrow';
 import { ShieldAlert, Loader2, CheckCircle, ExternalLink, ArrowLeft, Wallet, User, Hash, Coins } from 'lucide-react';
 import { networks } from '../contracts/escrow';
+import { ActivityTimeline } from '../components/ActivityTimeline';
 
 export const EscrowDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -194,6 +195,8 @@ export const EscrowDetail: React.FC = () => {
           </div>
         )}
       </div>
+      
+      <ActivityTimeline escrowId={id} />
     </div>
   );
 };

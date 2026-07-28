@@ -1,7 +1,7 @@
 import { Client, networks } from '../contracts/escrow';
 import { signTransaction, isAllowed, setAllowed, getAddress } from '@stellar/freighter-api';
 
-const rpcUrl = import.meta.env.VITE_RPC_URL || 'https://soroban-testnet.stellar.org';
+export const rpcUrl = import.meta.env.VITE_RPC_URL || 'https://soroban-testnet.stellar.org';
 
 export const escrowContract = new Client({
   networkPassphrase: networks.testnet.networkPassphrase,

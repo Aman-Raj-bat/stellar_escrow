@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useWallet } from '../store/WalletContext';
 import { ShieldCheck, Plus, Search, Clock, CheckCircle, Lock } from 'lucide-react';
 import { escrowContract } from '../services/stellar';
+import { RecentActivity } from '../components/RecentActivity';
 
 export const Dashboard: React.FC = () => {
   const { address } = useWallet();
@@ -131,6 +132,8 @@ export const Dashboard: React.FC = () => {
           )}
         </div>
       </div>
+      
+      <RecentActivity />
     </div>
   );
 };
