@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { isAllowed, setAllowed, getUserInfo } from '@stellar/freighter-api';
+import { isAllowed, setAllowed, getAddress } from '@stellar/freighter-api';
 
 interface WalletContextType {
   address: string | null;
@@ -18,9 +18,9 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const checkConnection = async () => {
     if (await isAllowed()) {
-      const userInfo = await getUserInfo();
-      if (userInfo.publicKey) {
-        setAddress(userInfo.publicKey);
+      const { address: userAddress, error } = await getAddress();
+      if (!error && userAddress) {
+        setAddress(userAddress);
       }
     }
   };

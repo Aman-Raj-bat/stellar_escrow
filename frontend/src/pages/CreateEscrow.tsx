@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useWallet } from '../store/WalletContext';
-import { escrowContract, signAndSubmitTransaction } from '../services/stellar';
+import { escrowContract, ensureWalletConnection } from '../services/stellar';
 import { ShieldAlert, Loader2 } from 'lucide-react';
 
 export const CreateEscrow: React.FC = () => {
@@ -10,7 +10,7 @@ export const CreateEscrow: React.FC = () => {
   
   const [freelancer, setFreelancer] = useState('');
   const [amount, setAmount] = useState('');
-  const [token, setToken] = useState('CDLZFC3SYJYDZT7K67VZ75HPJVIEWBE6PJUXYN3TYM67HY4Z32D4Z4R6'); // Native XLM dummy testnet token address (just as placeholder)
+  const [token, setToken] = useState('CDLZFC3SYJYDZT7K67VZ75HPJVIEWBE6PJUXYN3TYM67HY4Z32D4Z4R6'); // Native XLM dummy testnet token address
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -25,7 +25,7 @@ export const CreateEscrow: React.FC = () => {
     setError(null);
 
     try {
-      await signAndSubmitTransaction(async () => {});
+      await ensureWalletConnection();
       
       // Convert amount to stroops (1 XLM = 10,000,000 stroops)
       const stroopsAmount = BigInt(parseFloat(amount) * 10000000);
@@ -40,7 +40,7 @@ export const CreateEscrow: React.FC = () => {
 
       // The result would have the escrow ID (or we can simulate it)
       // Wait for it to be mined
-      await result.signAndSend({ signTransaction: true }); // Depending on bindings API
+      await result.signAndSend();
 
       navigate('/dashboard');
     } catch (err: any) {
