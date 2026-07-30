@@ -1,6 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useState, useEffect } from 'react';
-import { isAllowed, setAllowed, getAddress } from '@stellar/freighter-api';
+import { isAllowed, setAllowed, getAddress, getNetworkDetails } from '@stellar/freighter-api';
 
 interface WalletContextType {
   address: string | null;
@@ -14,6 +14,12 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [address, setAddress] = useState<string | null>(null);
 
   const checkConnection = async () => {
+    const networkDetails = await getNetworkDetails();
+    if (networkDetails.network !== 'TESTNET') {
+      setAddress(null);
+      return;
+    }
+
     if (await isAllowed()) {
       const { address: userAddress, error } = await getAddress();
       if (!error && userAddress) {

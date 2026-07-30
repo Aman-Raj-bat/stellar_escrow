@@ -11,6 +11,9 @@ use soroban_sdk::{
     contract, contractimpl, token, Address, Env
 };
 
+const TTL_THRESHOLD: u32 = 120_960; // ~7 days (assuming 5s ledgers)
+const TTL_EXTEND: u32 = 518_400; // ~30 days
+
 #[contract]
 pub struct TrustPayEscrow;
 
@@ -43,7 +46,10 @@ impl TrustPayEscrow {
         };
 
         env.storage().persistent().set(&DataKey::Escrow(nonce), &escrow);
+        env.storage().persistent().extend_ttl(&DataKey::Escrow(nonce), TTL_THRESHOLD, TTL_EXTEND);
+
         env.storage().instance().set(&DataKey::Nonce, &nonce);
+        env.storage().instance().extend_ttl(TTL_THRESHOLD, TTL_EXTEND);
 
         events::created(&env, nonce, client, freelancer, amount);
 
@@ -69,6 +75,7 @@ impl TrustPayEscrow {
 
         escrow.status = EscrowStatus::Funded;
         env.storage().persistent().set(&DataKey::Escrow(escrow_id), &escrow);
+        env.storage().persistent().extend_ttl(&DataKey::Escrow(escrow_id), TTL_THRESHOLD, TTL_EXTEND);
 
         events::funded(&env, escrow_id);
 
@@ -91,6 +98,7 @@ impl TrustPayEscrow {
 
         escrow.status = EscrowStatus::Accepted;
         env.storage().persistent().set(&DataKey::Escrow(escrow_id), &escrow);
+        env.storage().persistent().extend_ttl(&DataKey::Escrow(escrow_id), TTL_THRESHOLD, TTL_EXTEND);
 
         events::accepted(&env, escrow_id, escrow.freelancer.clone());
 
@@ -116,6 +124,7 @@ impl TrustPayEscrow {
 
         escrow.status = EscrowStatus::Released;
         env.storage().persistent().set(&DataKey::Escrow(escrow_id), &escrow);
+        env.storage().persistent().extend_ttl(&DataKey::Escrow(escrow_id), TTL_THRESHOLD, TTL_EXTEND);
 
         events::released(&env, escrow_id, escrow.client.clone());
 
@@ -141,6 +150,7 @@ impl TrustPayEscrow {
 
         escrow.status = EscrowStatus::Refunded;
         env.storage().persistent().set(&DataKey::Escrow(escrow_id), &escrow);
+        env.storage().persistent().extend_ttl(&DataKey::Escrow(escrow_id), TTL_THRESHOLD, TTL_EXTEND);
 
         events::refunded(&env, escrow_id, escrow.freelancer.clone());
 
@@ -149,9 +159,13 @@ impl TrustPayEscrow {
     
     /// Queries the status and details of an escrow
     pub fn get_escrow(env: Env, escrow_id: u64) -> Result<Escrow, Error> {
-        env.storage()
+        let escrow: Escrow = env.storage()
             .persistent()
             .get(&DataKey::Escrow(escrow_id))
-            .ok_or(Error::EscrowNotFound)
+            .ok_or(Error::EscrowNotFound)?;
+        
+        env.storage().persistent().extend_ttl(&DataKey::Escrow(escrow_id), TTL_THRESHOLD, TTL_EXTEND);
+
+        Ok(escrow)
     }
 }
