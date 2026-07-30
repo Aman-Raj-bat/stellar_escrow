@@ -1,28 +1,21 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useActivity } from '../hooks/useActivity';
-import type { ActivityEventType } from '../services/activity';
-import { Loader2, ExternalLink, ArrowRight, FilePlus, ArrowDownToLine, Handshake, Send, RotateCcw, AlertCircle } from 'lucide-react';
+import { ExternalLink, ArrowRight } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-
-const EventIcon: React.FC<{ type: ActivityEventType }> = ({ type }) => {
-  switch (type) {
-    case 'CREATED': return <FilePlus className="w-5 h-5 text-blue-500" />;
-    case 'FUNDED': return <ArrowDownToLine className="w-5 h-5 text-indigo-500" />;
-    case 'ACCEPTED': return <Handshake className="w-5 h-5 text-emerald-500" />;
-    case 'RELEASED': return <Send className="w-5 h-5 text-purple-500" />;
-    case 'REFUNDED': return <RotateCcw className="w-5 h-5 text-amber-500" />;
-    default: return <AlertCircle className="w-5 h-5 text-slate-500" />;
-  }
-};
+import { EventIcon } from './common/EventIcon';
+import { LoadingState } from './common/LoadingState';
+import { EmptyState } from './common/EmptyState';
+import { AlertMessage } from './common/AlertMessage';
+import { formatAddress } from '../utils/formatters';
 
 export const RecentActivity: React.FC = () => {
   const { activities, isLoading, error } = useActivity(); // Fetch all without ID filter
 
   if (error) {
     return (
-      <div className="p-6 bg-white rounded-2xl shadow-sm border border-slate-200 mt-8 text-center text-red-500">
-        Failed to load recent activity. {error}
+      <div className="mt-8">
+        <AlertMessage type="error" message={`Failed to load recent activity. ${error}`} />
       </div>
     );
   }
@@ -41,13 +34,12 @@ export const RecentActivity: React.FC = () => {
 
       <div className="p-0">
         {isLoading && activities.length === 0 ? (
-          <div className="flex justify-center items-center py-12">
-            <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
-          </div>
+          <LoadingState message="Loading global activity..." />
         ) : activities.length === 0 ? (
-          <div className="text-center py-12 text-slate-500">
-            No activity found yet. Be the first to create an escrow!
-          </div>
+          <EmptyState 
+            title="No Activity Found"
+            description="Be the first to create an escrow!"
+          />
         ) : (
           <ul className="divide-y divide-slate-100">
             {recentEvents.map((activity) => (
@@ -84,7 +76,7 @@ export const RecentActivity: React.FC = () => {
                         rel="noopener noreferrer"
                         className="font-mono text-xs text-slate-700 hover:text-indigo-600 flex items-center gap-1 justify-end"
                       >
-                        {activity.txHash.slice(0, 6)}...{activity.txHash.slice(-6)}
+                        {formatAddress(activity.txHash, 6)}
                         <ExternalLink className="w-3 h-3" />
                       </a>
                     </div>

@@ -1,10 +1,13 @@
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useWallet } from '../store/WalletContext';
+import { useWallet } from '../hooks/useWallet';
 import { useEscrow } from '../hooks/useEscrow';
 import { ShieldAlert, Loader2, CheckCircle, ExternalLink, ArrowLeft, Wallet, User, Hash, Coins } from 'lucide-react';
 import { networks } from '../contracts/escrow';
 import { ActivityTimeline } from '../components/ActivityTimeline';
+import { AlertMessage } from '../components/common/AlertMessage';
+import { LoadingState } from '../components/common/LoadingState';
+import { formatAddress, stroopsToXlm } from '../utils/formatters';
 
 export const EscrowDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -19,7 +22,7 @@ export const EscrowDetail: React.FC = () => {
   const isFreelancer = escrow?.freelancer === address;
 
   // Amount conversion (Stroops to XLM)
-  const displayAmount = escrow ? (Number(escrow.amount) / 10000000).toFixed(2) : '0';
+  const displayAmount = escrow ? stroopsToXlm(escrow.amount) : '0.00';
 
   const explorerUrl = txHash ? `https://stellar.expert/explorer/testnet/tx/${txHash}` : null;
 
@@ -54,12 +57,7 @@ export const EscrowDetail: React.FC = () => {
         </div>
 
         {/* Notifications */}
-        {error && (
-          <div className="m-6 p-4 bg-red-50 border border-red-100 text-red-600 rounded-xl flex items-start gap-3">
-            <ShieldAlert className="w-5 h-5 flex-shrink-0 mt-0.5" />
-            <p className="text-sm font-medium">{error}</p>
-          </div>
-        )}
+        {error && <AlertMessage type="error" message={error} className="m-6" />}
 
         {txHash && (
           <div className="m-6 p-4 bg-emerald-50 border border-emerald-100 text-emerald-700 rounded-xl flex items-start gap-3">
@@ -73,11 +71,8 @@ export const EscrowDetail: React.FC = () => {
           </div>
         )}
 
-        {/* Loading State */}
         {isLoading && !escrow && (
-          <div className="p-12 flex justify-center items-center">
-            <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
-          </div>
+          <LoadingState message="Loading escrow details..." className="p-12" />
         )}
 
         {/* Escrow Details */}
@@ -92,13 +87,13 @@ export const EscrowDetail: React.FC = () => {
                       <p className="text-xs font-semibold text-slate-500 mb-1 flex items-center gap-2">
                         <User className="w-3.5 h-3.5" /> Client {isClient && <span className="text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded text-[10px]">YOU</span>}
                       </p>
-                      <p className="font-mono text-sm break-all">{escrow.client}</p>
+                      <p className="font-mono text-sm break-all">{formatAddress(escrow.client, 8)}</p>
                     </div>
                     <div className={`p-4 rounded-xl border ${isFreelancer ? 'border-indigo-500 bg-indigo-50' : 'border-slate-200 bg-slate-50'}`}>
                       <p className="text-xs font-semibold text-slate-500 mb-1 flex items-center gap-2">
                         <User className="w-3.5 h-3.5" /> Freelancer {isFreelancer && <span className="text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded text-[10px]">YOU</span>}
                       </p>
-                      <p className="font-mono text-sm break-all">{escrow.freelancer}</p>
+                      <p className="font-mono text-sm break-all">{formatAddress(escrow.freelancer, 8)}</p>
                     </div>
                   </div>
                 </div>

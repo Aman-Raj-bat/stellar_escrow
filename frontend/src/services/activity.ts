@@ -24,6 +24,7 @@ export async function fetchContractEvents(escrowId?: string): Promise<ActivityEv
     const latestLedger = latestLedgerResponse.sequence;
     const startLedger = Math.max(1, latestLedger - 17280); 
     
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const request: any = {
       startLedger,
       filters: [
@@ -91,7 +92,7 @@ export async function fetchContractEvents(escrowId?: string): Promise<ActivityEv
 
     // Sort descending by ledger/timestamp
     return activities.sort((a, b) => b.ledger - a.ledger);
-  } catch (err) {
+  } catch (err: unknown) {
     console.error('Failed to fetch events', err);
     return []; // Return empty array on failure instead of breaking the app
   }

@@ -27,14 +27,15 @@ export function useEscrow(escrowId?: string) {
       const { result } = await escrowContract.get_escrow({ escrow_id: idBigInt });
       
       if (result) {
-        setEscrow(result as any);
+        setEscrow(result as unknown as EscrowData);
       } else {
         setError('Escrow not found.');
         setEscrow(null);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to fetch escrow:', err);
-      setError(err.message || 'Failed to fetch escrow details.');
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      setError(errorMessage || 'Failed to fetch escrow details.');
       setEscrow(null);
     } finally {
       setIsLoading(false);
@@ -42,9 +43,11 @@ export function useEscrow(escrowId?: string) {
   }, [escrowId]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchEscrow();
   }, [fetchEscrow]);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const executeAction = async (actionName: string, actionFn: (id: bigint) => Promise<any>) => {
     if (!escrowId) {
       setError('No escrow ID provided.');
@@ -64,17 +67,19 @@ export function useEscrow(escrowId?: string) {
       
       // Update transaction hash if available from Freighter response
       // Usually signAndSend returns an object with txHash or similar depending on bindings
-      if (result && (result as any).hash) {
-        setTxHash((result as any).hash);
+      const res = result as { hash?: string };
+      if (res && res.hash) {
+        setTxHash(res.hash);
       } else if (typeof result === 'string') {
         setTxHash(result);
       }
 
       await fetchEscrow(); // Refresh data
       return true;
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(`Failed to ${actionName}:`, err);
-      setError(err.message || `Failed to ${actionName} escrow.`);
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      setError(errorMessage || `Failed to ${actionName} escrow.`);
       return false;
     } finally {
       setIsLoading(false);

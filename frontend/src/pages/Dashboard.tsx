@@ -1,27 +1,37 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useWallet } from '../store/WalletContext';
-import { ShieldCheck, Plus, Search, Clock, CheckCircle, Lock } from 'lucide-react';
+import { useWallet } from '../hooks/useWallet';
+import { ShieldCheck, Plus, Search, Clock, CheckCircle, Lock, SearchX } from 'lucide-react';
 import { escrowContract } from '../services/stellar';
 import { RecentActivity } from '../components/RecentActivity';
+import { AlertMessage } from '../components/common/AlertMessage';
+import { EmptyState } from '../components/common/EmptyState';
+import { formatAddress, stroopsToXlm } from '../utils/formatters';
+import type { EscrowData } from '../hooks/useEscrow';
 
 export const Dashboard: React.FC = () => {
   const { address } = useWallet();
   const [searchId, setSearchId] = useState('');
-  const [queriedEscrow, setQueriedEscrow] = useState<any>(null);
+  const [queriedEscrow, setQueriedEscrow] = useState<EscrowData | null>(null);
+  const [searchError, setSearchError] = useState<string | null>(null);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSearchError(null);
+    setQueriedEscrow(null);
+    if (!searchId) return;
+
     try {
       const result = await escrowContract.get_escrow({ escrow_id: BigInt(searchId) });
-      // The result might need to be resolved depending on binding output
       const { result: escrowData } = await result.simulate();
       if (escrowData) {
-        setQueriedEscrow(escrowData);
+        setQueriedEscrow(escrowData as unknown as EscrowData);
+      } else {
+        setSearchError('Escrow not found.');
       }
-    } catch (err) {
+    } catch (err: unknown) {
       console.error(err);
-      alert('Escrow not found or network error.');
+      setSearchError('Escrow not found or network error.');
     }
   };
 
@@ -116,9 +126,9 @@ export const Dashboard: React.FC = () => {
                 </span>
               </div>
               <div className="space-y-2 mb-6">
-                <p className="text-sm"><span className="font-medium text-slate-500">Client:</span> <span className="font-mono">{queriedEscrow.client}</span></p>
-                <p className="text-sm"><span className="font-medium text-slate-500">Freelancer:</span> <span className="font-mono">{queriedEscrow.freelancer}</span></p>
-                <p className="text-sm"><span className="font-medium text-slate-500">Amount:</span> <span className="font-semibold text-slate-900">{(Number(queriedEscrow.amount) / 10000000).toFixed(2)} XLM</span></p>
+                <p className="text-sm"><span className="font-medium text-slate-500">Client:</span> <span className="font-mono">{formatAddress(queriedEscrow.client, 8)}</span></p>
+                <p className="text-sm"><span className="font-medium text-slate-500">Freelancer:</span> <span className="font-mono">{formatAddress(queriedEscrow.freelancer, 8)}</span></p>
+                <p className="text-sm"><span className="font-medium text-slate-500">Amount:</span> <span className="font-semibold text-slate-900">{stroopsToXlm(queriedEscrow.amount)} XLM</span></p>
               </div>
               <Link 
                 to={`/escrow/${queriedEscrow.id?.toString()}`}
@@ -128,7 +138,14 @@ export const Dashboard: React.FC = () => {
               </Link>
             </div>
           ) : (
-            "No escrows found. Please search by ID or create a new one."
+            <>
+              {searchError && <AlertMessage type="error" message={searchError} className="mb-4 text-left" />}
+              <EmptyState 
+                title="No Escrow Selected" 
+                description="Search for an escrow by ID above or create a new one to get started." 
+                icon={<SearchX className="w-8 h-8" />} 
+              />
+            </>
           )}
         </div>
       </div>

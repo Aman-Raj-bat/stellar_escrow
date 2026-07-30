@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useWallet } from '../store/WalletContext';
+import { useWallet } from '../hooks/useWallet';
 import { escrowContract, ensureWalletConnection } from '../services/stellar';
-import { ShieldAlert, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
+import { DEFAULT_TOKEN_ADDRESS } from '../utils/constants';
+import { xlmToStroops } from '../utils/formatters';
+import { AlertMessage } from '../components/common/AlertMessage';
 
 export const CreateEscrow: React.FC = () => {
   const { address } = useWallet();
@@ -10,7 +13,7 @@ export const CreateEscrow: React.FC = () => {
   
   const [freelancer, setFreelancer] = useState('');
   const [amount, setAmount] = useState('');
-  const [token, setToken] = useState('CDLZFC3SYJYDZT7K67VZ75HPJVIEWBE6PJUXYN3TYM67HY4Z32D4Z4R6'); // Native XLM dummy testnet token address
+  const [token, setToken] = useState(DEFAULT_TOKEN_ADDRESS);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -25,10 +28,14 @@ export const CreateEscrow: React.FC = () => {
     setError(null);
 
     try {
+      if (!freelancer.startsWith('G') || freelancer.length !== 56) {
+        throw new Error('Invalid Stellar address for freelancer.');
+      }
+
       await ensureWalletConnection();
       
       // Convert amount to stroops (1 XLM = 10,000,000 stroops)
-      const stroopsAmount = BigInt(parseFloat(amount) * 10000000);
+      const stroopsAmount = xlmToStroops(amount);
 
       // Call the create_escrow function
       const result = await escrowContract.create_escrow({
@@ -43,9 +50,10 @@ export const CreateEscrow: React.FC = () => {
       await result.signAndSend();
 
       navigate('/dashboard');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      setError(err.message || 'Failed to create escrow. Please check inputs and wallet.');
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      setError(errorMessage || 'Failed to create escrow. Please check inputs and wallet.');
     } finally {
       setIsLoading(false);
     }
@@ -57,12 +65,7 @@ export const CreateEscrow: React.FC = () => {
         <h1 className="text-3xl font-bold text-slate-900 mb-2">Create Escrow</h1>
         <p className="text-slate-600 mb-8">Securely lock funds for a freelancer. Funds will only be released when you approve the work.</p>
 
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-100 text-red-600 rounded-xl flex items-start gap-3">
-            <ShieldAlert className="w-5 h-5 flex-shrink-0 mt-0.5" />
-            <p className="text-sm font-medium">{error}</p>
-          </div>
-        )}
+        {error && <AlertMessage type="error" message={error} className="mb-6" />}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>

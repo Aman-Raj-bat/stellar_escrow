@@ -13,14 +13,16 @@ export function useActivity(escrowId?: string, pollIntervalMs: number = 10000) {
       const data = await fetchContractEvents(escrowId);
       setActivities(data);
       setError(null);
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch activity');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      setError(errorMessage || 'Failed to fetch activity');
     } finally {
       if (!silent) setIsLoading(false);
     }
   }, [escrowId]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchActivities();
     
     // Auto-polling for real-time updates

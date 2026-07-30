@@ -1,7 +1,8 @@
 import React from 'react';
 import { Outlet, Link } from 'react-router-dom';
-import { useWallet } from '../store/WalletContext';
+import { useWallet } from '../hooks/useWallet';
 import { ShieldCheck, LogOut, Wallet } from 'lucide-react';
+import { formatAddress } from '../utils/formatters';
 
 export const MainLayout: React.FC = () => {
   const { address, connect, disconnect } = useWallet();
@@ -30,7 +31,7 @@ export const MainLayout: React.FC = () => {
                 <div className="bg-slate-100 px-3 py-1.5 rounded-full border border-slate-200 flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
                   <span className="text-sm font-medium text-slate-700">
-                    {address.slice(0, 4)}...{address.slice(-4)}
+                    {formatAddress(address)}
                   </span>
                 </div>
                 <button

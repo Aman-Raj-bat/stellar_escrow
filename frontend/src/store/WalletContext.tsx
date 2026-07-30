@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+/* eslint-disable react-refresh/only-export-components */
+import React, { createContext, useState, useEffect } from 'react';
 import { isAllowed, setAllowed, getAddress } from '@stellar/freighter-api';
 
 interface WalletContextType {
@@ -7,14 +8,10 @@ interface WalletContextType {
   disconnect: () => void;
 }
 
-const WalletContext = createContext<WalletContextType | undefined>(undefined);
+export const WalletContext = createContext<WalletContextType | undefined>(undefined);
 
 export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [address, setAddress] = useState<string | null>(null);
-
-  useEffect(() => {
-    checkConnection();
-  }, []);
 
   const checkConnection = async () => {
     if (await isAllowed()) {
@@ -24,6 +21,12 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
     }
   };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    checkConnection();
+  }, []);
+
 
   const connect = async () => {
     await setAllowed();
@@ -41,8 +44,3 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   );
 };
 
-export const useWallet = () => {
-  const context = useContext(WalletContext);
-  if (!context) throw new Error('useWallet must be used within WalletProvider');
-  return context;
-};
