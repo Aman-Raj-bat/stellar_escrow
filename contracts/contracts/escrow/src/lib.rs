@@ -1,17 +1,15 @@
 #![no_std]
 
-mod errors;
-mod events;
 mod storage_types;
 mod test;
 
-use errors::Error;
-use storage_types::{DataKey, Escrow, EscrowStatus};
-use soroban_sdk::{
-    contract, contractimpl, token, Address, Env
-};
+use storage_types::DataKey;
+use trustpay_shared::errors::Error;
+use trustpay_shared::events;
+use trustpay_shared::types::{Escrow, EscrowStatus};
+use soroban_sdk::{contract, contractimpl, token, Address, Env};
 
-const TTL_THRESHOLD: u32 = 120_960; // ~7 days (assuming 5s ledgers)
+const TTL_THRESHOLD: u32 = 120_960; // ~7 days
 const TTL_EXTEND: u32 = 518_400; // ~30 days
 
 #[contract]
@@ -19,25 +17,21 @@ pub struct TrustPayEscrow;
 
 #[contractimpl]
 impl TrustPayEscrow {
-    /// Creates a new escrow agreement. Returns the Escrow ID.
-    pub fn create_escrow(
+    /// Initializes a new escrow agreement.
+    pub fn init_escrow(
         env: Env,
+        id: u64,
         client: Address,
         freelancer: Address,
         amount: i128,
         token: Address,
-    ) -> Result<u64, Error> {
-        client.require_auth();
-
-        if amount <= 0 {
-            return Err(Error::AmountTooLow);
+    ) -> Result<(), Error> {
+        if env.storage().persistent().has(&DataKey::Escrow(id)) {
+            return Err(Error::InvalidStatus); // Reuse error
         }
 
-        let mut nonce: u64 = env.storage().instance().get(&DataKey::Nonce).unwrap_or(0);
-        nonce += 1;
-        
         let escrow = Escrow {
-            id: nonce,
+            id,
             client: client.clone(),
             freelancer: freelancer.clone(),
             amount,
@@ -45,15 +39,12 @@ impl TrustPayEscrow {
             status: EscrowStatus::Created,
         };
 
-        env.storage().persistent().set(&DataKey::Escrow(nonce), &escrow);
-        env.storage().persistent().extend_ttl(&DataKey::Escrow(nonce), TTL_THRESHOLD, TTL_EXTEND);
+        env.storage().persistent().set(&DataKey::Escrow(id), &escrow);
+        env.storage().persistent().extend_ttl(&DataKey::Escrow(id), TTL_THRESHOLD, TTL_EXTEND);
 
-        env.storage().instance().set(&DataKey::Nonce, &nonce);
-        env.storage().instance().extend_ttl(TTL_THRESHOLD, TTL_EXTEND);
+        events::created(&env, id, client, freelancer, amount);
 
-        events::created(&env, nonce, client, freelancer, amount);
-
-        Ok(nonce)
+        Ok(())
     }
 
     /// Deposits funds into the escrow contract, moving it from `Created` to `Funded`.

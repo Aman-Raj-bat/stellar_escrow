@@ -1,16 +1,15 @@
 [package]
-name = "trustpay-escrow"
+name = "trustpay-shared"
 version = "0.0.0"
 edition = "2021"
 publish = false
 
 [lib]
-crate-type = ["lib", "cdylib"]
+crate-type = ["rlib"]
 doctest = false
 
 [dependencies]
 soroban-sdk = { workspace = true }
-trustpay-shared = { path = "../shared" }
 
 [dev-dependencies]
 soroban-sdk = { workspace = true, features = ["testutils"] }

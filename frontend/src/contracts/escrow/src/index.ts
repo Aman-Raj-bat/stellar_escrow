@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Buffer } from "buffer";
 import { Address } from "@stellar/stellar-sdk";
 import {
@@ -22,7 +21,7 @@ import type {
   Timepoint,
   Duration,
 } from "@stellar/stellar-sdk/contract";
-// export * from "@stellar/stellar-sdk";
+export * from "@stellar/stellar-sdk";
 export * as contract from "@stellar/stellar-sdk/contract";
 export * as rpc from "@stellar/stellar-sdk/rpc";
 
@@ -32,12 +31,9 @@ if (typeof window !== "undefined") {
 }
 
 
-export const networks = {
-  testnet: {
-    networkPassphrase: "Test SDF Network ; September 2015",
-    contractId: "CBM7LY5JTAMIJBU3IC2U6TMW42WXXFWWVVUQ4R5OUUUX3SZV7JV5Z6TF",
-  }
-} as const
+
+
+export type DataKey = {tag: "Escrow", values: readonly [u64]};
 
 
 export interface Escrow {
@@ -48,8 +44,6 @@ export interface Escrow {
   status: EscrowStatus;
   token: string;
 }
-
-export type DataKey = {tag: "Escrow", values: readonly [u64]} | {tag: "Nonce", values: void};
 
 export type EscrowStatus = {tag: "Created", values: void} | {tag: "Funded", values: void} | {tag: "Accepted", values: void} | {tag: "Released", values: void} | {tag: "Refunded", values: void};
 
@@ -93,10 +87,10 @@ export interface Client {
   get_escrow: ({escrow_id}: {escrow_id: u64}, options?: MethodOptions) => Promise<AssembledTransaction<Result<Escrow>>>
 
   /**
-   * Construct and simulate a create_escrow transaction. Returns an `AssembledTransaction` object which will have a `result` field containing the result of the simulation. If this transaction changes contract state, you will need to call `signAndSend()` on the returned object.
-   * Creates a new escrow agreement. Returns the Escrow ID.
+   * Construct and simulate a init_escrow transaction. Returns an `AssembledTransaction` object which will have a `result` field containing the result of the simulation. If this transaction changes contract state, you will need to call `signAndSend()` on the returned object.
+   * Initializes a new escrow agreement.
    */
-  create_escrow: ({client, freelancer, amount, token}: {client: string, freelancer: string, amount: i128, token: string}, options?: MethodOptions) => Promise<AssembledTransaction<Result<u64>>>
+  init_escrow: ({id, client, freelancer, amount, token}: {id: u64, client: string, freelancer: string, amount: i128, token: string}, options?: MethodOptions) => Promise<AssembledTransaction<Result<void>>>
 
 }
 export class Client extends ContractClient {
@@ -116,15 +110,15 @@ export class Client extends ContractClient {
   }
   constructor(public readonly options: ContractClientOptions) {
     super(
-      new ContractSpec([ "AAAAAQAAAAAAAAAAAAAABkVzY3JvdwAAAAAABgAAAAAAAAAGYW1vdW50AAAAAAALAAAAAAAAAAZjbGllbnQAAAAAABMAAAAAAAAACmZyZWVsYW5jZXIAAAAAABMAAAAAAAAAAmlkAAAAAAAGAAAAAAAAAAZzdGF0dXMAAAAAB9AAAAAMRXNjcm93U3RhdHVzAAAAAAAAAAV0b2tlbgAAAAAAABM=",
-        "AAAAAgAAAAAAAAAAAAAAB0RhdGFLZXkAAAAAAgAAAAEAAAAAAAAABkVzY3JvdwAAAAAAAQAAAAYAAAAAAAAAAAAAAAVOb25jZQAAAA==",
-        "AAAAAgAAAAAAAAAAAAAADEVzY3Jvd1N0YXR1cwAAAAUAAAAAAAAAAAAAAAdDcmVhdGVkAAAAAAAAAAAAAAAABkZ1bmRlZAAAAAAAAAAAAAAAAAAIQWNjZXB0ZWQAAAAAAAAAAAAAAAhSZWxlYXNlZAAAAAAAAAAAAAAACFJlZnVuZGVk",
+      new ContractSpec([ "AAAAAgAAAAAAAAAAAAAAB0RhdGFLZXkAAAAAAQAAAAEAAAAAAAAABkVzY3JvdwAAAAAAAQAAAAY=",
         "AAAAAAAAADZGcmVlbGFuY2VyIGFjY2VwdHMgdGhlIGVzY3JvdywgYWdyZWVpbmcgdG8gc3RhcnQgd29yay4AAAAAAAZhY2NlcHQAAAAAAAEAAAAAAAAACWVzY3Jvd19pZAAAAAAAAAYAAAABAAAD6QAAAAIAAAAD",
         "AAAAAAAAAD1GcmVlbGFuY2VyIHJlZnVuZHMgdGhlIGNsaWVudCwgcmV0dXJuaW5nIGZ1bmRzIHRvIHRoZSBjbGllbnQuAAAAAAAABnJlZnVuZAAAAAAAAQAAAAAAAAAJZXNjcm93X2lkAAAAAAAABgAAAAEAAAPpAAAAAgAAAAM=",
         "AAAAAAAAAE5EZXBvc2l0cyBmdW5kcyBpbnRvIHRoZSBlc2Nyb3cgY29udHJhY3QsIG1vdmluZyBpdCBmcm9tIGBDcmVhdGVkYCB0byBgRnVuZGVkYC4AAAAAAAdkZXBvc2l0AAAAAAEAAAAAAAAACWVzY3Jvd19pZAAAAAAAAAYAAAABAAAD6QAAAAIAAAAD",
         "AAAAAAAAAEBDbGllbnQgcmVsZWFzZXMgZnVuZHMgdG8gdGhlIGZyZWVsYW5jZXIgYWZ0ZXIgd29yayBpcyBjb21wbGV0ZWQuAAAAB3JlbGVhc2UAAAAAAQAAAAAAAAAJZXNjcm93X2lkAAAAAAAABgAAAAEAAAPpAAAAAgAAAAM=",
         "AAAAAAAAACtRdWVyaWVzIHRoZSBzdGF0dXMgYW5kIGRldGFpbHMgb2YgYW4gZXNjcm93AAAAAApnZXRfZXNjcm93AAAAAAABAAAAAAAAAAllc2Nyb3dfaWQAAAAAAAAGAAAAAQAAA+kAAAfQAAAABkVzY3JvdwAAAAAAAw==",
-        "AAAAAAAAADZDcmVhdGVzIGEgbmV3IGVzY3JvdyBhZ3JlZW1lbnQuIFJldHVybnMgdGhlIEVzY3JvdyBJRC4AAAAAAA1jcmVhdGVfZXNjcm93AAAAAAAABAAAAAAAAAAGY2xpZW50AAAAAAATAAAAAAAAAApmcmVlbGFuY2VyAAAAAAATAAAAAAAAAAZhbW91bnQAAAAAAAsAAAAAAAAABXRva2VuAAAAAAAAEwAAAAEAAAPpAAAABgAAAAM=",
+        "AAAAAAAAACNJbml0aWFsaXplcyBhIG5ldyBlc2Nyb3cgYWdyZWVtZW50LgAAAAALaW5pdF9lc2Nyb3cAAAAABQAAAAAAAAACaWQAAAAAAAYAAAAAAAAABmNsaWVudAAAAAAAEwAAAAAAAAAKZnJlZWxhbmNlcgAAAAAAEwAAAAAAAAAGYW1vdW50AAAAAAALAAAAAAAAAAV0b2tlbgAAAAAAABMAAAABAAAD6QAAAAIAAAAD",
+        "AAAAAQAAAAAAAAAAAAAABkVzY3JvdwAAAAAABgAAAAAAAAAGYW1vdW50AAAAAAALAAAAAAAAAAZjbGllbnQAAAAAABMAAAAAAAAACmZyZWVsYW5jZXIAAAAAABMAAAAAAAAAAmlkAAAAAAAGAAAAAAAAAAZzdGF0dXMAAAAAB9AAAAAMRXNjcm93U3RhdHVzAAAAAAAAAAV0b2tlbgAAAAAAABM=",
+        "AAAAAgAAAAAAAAAAAAAADEVzY3Jvd1N0YXR1cwAAAAUAAAAAAAAAAAAAAAdDcmVhdGVkAAAAAAAAAAAAAAAABkZ1bmRlZAAAAAAAAAAAAAAAAAAIQWNjZXB0ZWQAAAAAAAAAAAAAAAhSZWxlYXNlZAAAAAAAAAAAAAAACFJlZnVuZGVk",
         "AAAABAAAAAAAAAAAAAAABUVycm9yAAAAAAAABQAAAAAAAAANTm90QXV0aG9yaXplZAAAAAAAAAEAAAAAAAAADkVzY3Jvd05vdEZvdW5kAAAAAAACAAAAAAAAAA1JbnZhbGlkU3RhdHVzAAAAAAAAAwAAAAAAAAAMQW1vdW50VG9vTG93AAAABAAAAAAAAAAOVHJhbnNmZXJGYWlsZWQAAAAAAAU=" ]),
       options
     )
@@ -135,6 +129,6 @@ export class Client extends ContractClient {
         deposit: this.txFromJSON<Result<void>>,
         release: this.txFromJSON<Result<void>>,
         get_escrow: this.txFromJSON<Result<Escrow>>,
-        create_escrow: this.txFromJSON<Result<u64>>
+        init_escrow: this.txFromJSON<Result<void>>
   }
 }

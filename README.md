@@ -10,7 +10,10 @@ TrustPay is a secure, decentralized escrow application built on the Stellar netw
 - **Transaction tracking**: Real-time status visibility for all contract interactions.
 - **Activity feed**: Event synchronization from the blockchain providing a transparent history of actions.
 - **Wallet/network validation**: Automatic detection and enforcement of the Stellar Testnet.
+- **Modular Smart Contract Architecture**: Factory pattern allows creating individual Escrow contracts, isolating state and risk per transaction.
 - **Production-ready UI**: A beautiful, modern interface built with React, Tailwind CSS, and Framer Motion.
+- **Automated Deployment**: Deployment scripts and CI/CD pipelines configured via GitHub Actions.
+- **Comprehensive Testing**: Robust frontend (`Vitest`, `React Testing Library`) and smart contract (`cargo test`) test suites.
 - **Responsive design**: Fully optimized for desktop, tablet, and mobile experiences.
 
 ## Tech Stack
@@ -38,9 +41,11 @@ TrustPay is a secure, decentralized escrow application built on the Stellar netw
 - xBull
 - Albedo
 
-### Tooling
+### Tooling & DevOps
 - ESLint
 - PostCSS
+- Vitest / React Testing Library
+- GitHub Actions (CI/CD)
 
 ### Deployment
 - *Pending Deployment environment*
@@ -51,7 +56,7 @@ TrustPay operates with a clean separation of concerns:
 
 - **React Frontend**: A modern single-page application handling UI rendering, user input, and state visualization.
 - **Wallet Layer**: Powered by `@creit.tech/stellar-wallets-kit`, managing secure connections and transaction signing without exposing private keys to the application.
-- **Soroban Smart Contract**: A Rust-based contract deployed on Stellar that serves as the ultimate source of truth, enforcing business logic, verifying signatures, and managing the actual escrowed funds.
+- **Soroban Smart Contract**: A modular Rust-based architecture consisting of a **Factory** contract (which tracks nonces and spawns escrows) and **Escrow** contracts (which manage state and funds).
 - **Event Synchronization**: The application continuously polls Soroban RPC for emitted contract events, providing a real-time, decentralized activity feed.
 - **State Management**: A React Context-based approach handles the wallet connection state globally, while localized hooks (`useEscrow`, `useActivity`) manage specific feature states.
 

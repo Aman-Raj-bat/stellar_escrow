@@ -1,5 +1,5 @@
 [package]
-name = "trustpay-escrow"
+name = "trustpay-factory"
 version = "0.0.0"
 edition = "2021"
 publish = false
@@ -14,3 +14,4 @@ trustpay-shared = { path = "../shared" }
 
 [dev-dependencies]
 soroban-sdk = { workspace = true, features = ["testutils"] }
+trustpay-escrow = { path = "../escrow" }

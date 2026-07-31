@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { useWallet } from '../hooks/useWallet';
 import { useEscrow } from '../hooks/useEscrow';
 import { ShieldAlert, Loader2, CheckCircle, ExternalLink, ArrowLeft, Wallet, User, Hash, Coins } from 'lucide-react';
-import { networks } from '../contracts/escrow';
+
 import { ActivityTimeline } from '../components/ActivityTimeline';
 import { AlertMessage } from '../components/common/AlertMessage';
 import { LoadingState } from '../components/common/LoadingState';
@@ -51,7 +51,7 @@ export const EscrowDetail: React.FC = () => {
           <div className="text-right">
             <p className="text-sm font-medium text-slate-500 mb-1">Contract ID</p>
             <p className="font-mono text-sm bg-white px-3 py-1.5 rounded-lg border border-slate-200">
-              {networks.testnet.contractId.slice(0, 8)}...{networks.testnet.contractId.slice(-8)}
+              {import.meta.env.VITE_CONTRACT_ID ? `${import.meta.env.VITE_CONTRACT_ID.slice(0, 8)}...${import.meta.env.VITE_CONTRACT_ID.slice(-8)}` : 'CAAAAAAA...2KB'}
             </p>
           </div>
         </div>

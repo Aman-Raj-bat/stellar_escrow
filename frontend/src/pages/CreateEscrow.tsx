@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useWallet } from '../hooks/useWallet';
-import { escrowContract, ensureWalletConnection } from '../services/stellar';
+import { factoryContract, ensureWalletConnection } from '../services/stellar';
 import { Loader2 } from 'lucide-react';
 import { DEFAULT_TOKEN_ADDRESS } from '../utils/constants';
 import { xlmToStroops } from '../utils/formatters';
@@ -37,8 +37,8 @@ export const CreateEscrow: React.FC = () => {
       // Convert amount to stroops (1 XLM = 10,000,000 stroops)
       const stroopsAmount = xlmToStroops(amount);
 
-      // Call the create_escrow function
-      const result = await escrowContract.create_escrow({
+      // Call the create_escrow function on Factory
+      const result = await factoryContract.create_escrow({
         client: address,
         freelancer,
         amount: stroopsAmount,

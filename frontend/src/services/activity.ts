@@ -1,4 +1,4 @@
-import { rpc, networks } from '../contracts/escrow';
+import { rpc } from '../contracts/escrow';
 import { scValToNative } from '@stellar/stellar-sdk';
 import { rpcUrl } from './stellar';
 
@@ -31,7 +31,7 @@ export async function fetchContractEvents(escrowId?: string): Promise<ActivityEv
       filters: [
         {
           type: "contract",
-          contractIds: [networks.testnet.contractId],
+          contractIds: [import.meta.env.VITE_CONTRACT_ID || 'CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KB'],
           topics: [
             // match events where topic 0 is 'ESCROW' symbol. We can leave it open to catch everything for the contract
           ]

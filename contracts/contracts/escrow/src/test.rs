@@ -1,10 +1,10 @@
 #![cfg(test)]
 
 use super::*;
-use soroban_sdk::{testutils::{Address as _, MockAuth, MockAuthInvoke}, token, Address, Env, IntoVal};
+use soroban_sdk::{testutils::Address as _, token, Address, Env};
 
 fn create_token_contract<'a>(env: &Env, admin: &Address) -> token::StellarAssetClient<'a> {
-    let contract_id = env.register_stellar_asset_contract(admin.clone());
+    let contract_id = env.register_stellar_asset_contract_v2(admin.clone()).address();
     token::StellarAssetClient::new(env, &contract_id)
 }
 
@@ -26,13 +26,13 @@ fn test_escrow_flow() {
     assert_eq!(token::Client::new(&env, &token_id).balance(&client), 1000);
 
     // Deploy Escrow Contract
-    let contract_id = env.register_contract(None, TrustPayEscrow);
+    let contract_id = env.register(TrustPayEscrow, ());
     let escrow_client = TrustPayEscrowClient::new(&env, &contract_id);
 
-    // 1. Create Escrow
+    // 1. Init Escrow
     let amount: i128 = 500;
-    let escrow_id = escrow_client.create_escrow(&client, &freelancer, &amount, &token_id);
-    assert_eq!(escrow_id, 1);
+    let escrow_id = 1u64;
+    escrow_client.init_escrow(&escrow_id, &client, &freelancer, &amount, &token_id);
 
     let mut escrow = escrow_client.get_escrow(&escrow_id);
     assert_eq!(escrow.status, EscrowStatus::Created);

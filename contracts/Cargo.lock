@@ -1759,6 +1759,23 @@ name = "trustpay-escrow"
 version = "0.0.0"
 dependencies = [
  "soroban-sdk",
+ "trustpay-shared",
+]
+
+[[package]]
+name = "trustpay-factory"
+version = "0.0.0"
+dependencies = [
+ "soroban-sdk",
+ "trustpay-escrow",
+ "trustpay-shared",
+]
+
+[[package]]
+name = "trustpay-shared"
+version = "0.0.0"
+dependencies = [
+ "soroban-sdk",
 ]
 
 [[package]]
