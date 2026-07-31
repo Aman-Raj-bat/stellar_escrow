@@ -1,31 +1,48 @@
 import { Client, networks } from '../contracts/escrow';
-import { signTransaction, isAllowed, setAllowed, getAddress, getNetworkDetails } from '@stellar/freighter-api';
+import { StellarWalletsKit } from '@creit.tech/stellar-wallets-kit';
+import { Networks } from '@creit.tech/stellar-wallets-kit/types';
+import { FreighterModule } from '@creit.tech/stellar-wallets-kit/modules/freighter';
+import { xBullModule } from '@creit.tech/stellar-wallets-kit/modules/xbull';
+import { AlbedoModule } from '@creit.tech/stellar-wallets-kit/modules/albedo';
 
 export const rpcUrl = import.meta.env.VITE_RPC_URL || 'https://soroban-testnet.stellar.org';
+
+StellarWalletsKit.init({
+  selectedWalletId: 'freighter',
+  network: Networks.TESTNET,
+  modules: [
+    new FreighterModule(),
+    new xBullModule(),
+    new AlbedoModule(),
+  ],
+});
 
 export const escrowContract = new Client({
   networkPassphrase: networks.testnet.networkPassphrase,
   contractId: networks.testnet.contractId,
   rpcUrl,
-  signTransaction,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  signTransaction: async (tx: any, opts?: any) => {
+    const xdr = typeof tx === 'string' ? tx : tx.toXDR();
+    const result = await StellarWalletsKit.signTransaction(xdr, {
+      networkPassphrase: networks.testnet.networkPassphrase,
+      ...opts
+    });
+    return result;
+  },
 });
 
 /**
  * Ensures the Freighter wallet is connected and returns the public key.
  */
 export async function ensureWalletConnection() {
-  const networkDetails = await getNetworkDetails();
-  if (networkDetails.network !== 'TESTNET') {
-    throw new Error('Please switch Freighter to the Stellar Testnet.');
+  try {
+    const { address } = await StellarWalletsKit.getAddress();
+    if (!address) {
+      throw new Error('Wallet is not connected.');
+    }
+    return address;
+  } catch (error) {
+    throw new Error('Wallet is not connected or request was rejected.', { cause: error });
   }
-
-  if (!(await isAllowed())) {
-    await setAllowed();
-  }
-  
-  const { address, error } = await getAddress();
-  if (error || !address) {
-    throw new Error('Freighter is locked or not connected.');
-  }
-  return address;
 }

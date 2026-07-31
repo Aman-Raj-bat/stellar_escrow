@@ -1,6 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useState, useEffect } from 'react';
-import { isAllowed, setAllowed, getAddress, getNetworkDetails } from '@stellar/freighter-api';
+import { StellarWalletsKit } from '@creit.tech/stellar-wallets-kit';
+import '../services/stellar';
 
 interface WalletContextType {
   address: string | null;
@@ -14,17 +15,14 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [address, setAddress] = useState<string | null>(null);
 
   const checkConnection = async () => {
-    const networkDetails = await getNetworkDetails();
-    if (networkDetails.network !== 'TESTNET') {
-      setAddress(null);
-      return;
-    }
-
-    if (await isAllowed()) {
-      const { address: userAddress, error } = await getAddress();
-      if (!error && userAddress) {
+    try {
+      const { address: userAddress } = await StellarWalletsKit.getAddress();
+      if (userAddress) {
         setAddress(userAddress);
       }
+    } catch {
+      // Not connected, keep address null
+      setAddress(null);
     }
   };
 
@@ -33,13 +31,23 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     checkConnection();
   }, []);
 
-
   const connect = async () => {
-    await setAllowed();
-    await checkConnection();
+    try {
+      const { address: userAddress } = await StellarWalletsKit.authModal();
+      if (userAddress) {
+        setAddress(userAddress);
+      }
+    } catch (e) {
+      console.error('Wallet modal closed or error:', e);
+    }
   };
 
-  const disconnect = () => {
+  const disconnect = async () => {
+    try {
+      await StellarWalletsKit.disconnect();
+    } catch {
+      // ignore
+    }
     setAddress(null);
   };
 
