@@ -18,20 +18,22 @@ StellarWalletsKit.init({
   ],
 });
 
-export const escrowContract = new EscrowClient({
-  networkPassphrase: 'Test SDF Network ; September 2015',
-  contractId: import.meta.env.VITE_CONTRACT_ID || 'CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KB',
-  rpcUrl,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  signTransaction: async (tx: any, opts?: any) => {
-    const xdr = typeof tx === 'string' ? tx : tx.toXDR();
-    const result = await StellarWalletsKit.signTransaction(xdr, {
-      networkPassphrase: 'Test SDF Network ; September 2015',
-      ...opts
-    });
-    return result;
-  },
-});
+export function getEscrowContract(contractId: string) {
+  return new EscrowClient({
+    networkPassphrase: 'Test SDF Network ; September 2015',
+    contractId,
+    rpcUrl,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    signTransaction: async (tx: any, opts?: any) => {
+      const xdr = typeof tx === 'string' ? tx : tx.toXDR();
+      const result = await StellarWalletsKit.signTransaction(xdr, {
+        networkPassphrase: 'Test SDF Network ; September 2015',
+        ...opts
+      });
+      return result;
+    },
+  });
+}
 
 export const factoryContract = new FactoryClient({
   networkPassphrase: 'Test SDF Network ; September 2015',

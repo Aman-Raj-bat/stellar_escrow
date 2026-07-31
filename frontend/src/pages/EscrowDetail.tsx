@@ -37,7 +37,7 @@ export const EscrowDetail: React.FC = () => {
         <div className="bg-slate-50 p-6 border-b border-slate-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-3">
-              Escrow #{id}
+              Escrow Details
               {currentStatus && (
                 <span className="px-3 py-1 rounded-full text-sm font-semibold bg-indigo-100 text-indigo-700">
                   {currentStatus}
@@ -49,9 +49,9 @@ export const EscrowDetail: React.FC = () => {
             </p>
           </div>
           <div className="text-right">
-            <p className="text-sm font-medium text-slate-500 mb-1">Contract ID</p>
-            <p className="font-mono text-sm bg-white px-3 py-1.5 rounded-lg border border-slate-200">
-              {import.meta.env.VITE_CONTRACT_ID ? `${import.meta.env.VITE_CONTRACT_ID.slice(0, 8)}...${import.meta.env.VITE_CONTRACT_ID.slice(-8)}` : 'CAAAAAAA...2KB'}
+            <p className="text-sm font-medium text-slate-500 mb-1">Contract Address</p>
+            <p className="font-mono text-sm bg-white px-3 py-1.5 rounded-lg border border-slate-200" title={id}>
+              {id.slice(0, 8)}...{id.slice(-8)}
             </p>
           </div>
         </div>

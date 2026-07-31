@@ -3,5 +3,5 @@ use soroban_sdk::contracttype;
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum DataKey {
-    Escrow(u64), // Maps Escrow ID to Escrow data
+    Escrow, // Single instance of Escrow per contract
 }

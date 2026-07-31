@@ -59,11 +59,7 @@
             "contract_fn": {
               "contract_address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAK3IM",
               "function_name": "deposit",
-              "args": [
-                {
-                  "u64": "1"
-                }
-              ]
+              "args": []
             }
           },
           "sub_invocations": [
@@ -102,11 +98,7 @@
             "contract_fn": {
               "contract_address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAK3IM",
               "function_name": "accept",
-              "args": [
-                {
-                  "u64": "1"
-                }
-              ]
+              "args": []
             }
           },
           "sub_invocations": []
@@ -122,11 +114,7 @@
             "contract_fn": {
               "contract_address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAK3IM",
               "function_name": "release",
-              "args": [
-                {
-                  "u64": "1"
-                }
-              ]
+              "args": []
             }
           },
           "sub_invocations": []
@@ -279,9 +267,6 @@
                 "vec": [
                   {
                     "symbol": "Escrow"
-                  },
-                  {
-                    "u64": "1"
                   }
                 ]
               },

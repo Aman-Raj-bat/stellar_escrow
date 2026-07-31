@@ -33,7 +33,7 @@ if (typeof window !== "undefined") {
 
 
 
-export type DataKey = {tag: "Nonce", values: void} | {tag: "EscrowContract", values: void};
+export type DataKey = {tag: "Nonce", values: void} | {tag: "EscrowWasmHash", values: void};
 
 
 export interface Escrow {
@@ -58,14 +58,14 @@ export const Errors = {
 export interface Client {
   /**
    * Construct and simulate a init transaction. Returns an `AssembledTransaction` object which will have a `result` field containing the result of the simulation. If this transaction changes contract state, you will need to call `signAndSend()` on the returned object.
-   * Initialize the factory with the address of the escrow manager contract
+   * Initialize the factory with the WASM hash of the escrow contract
    */
-  init: ({escrow_contract}: {escrow_contract: string}, options?: MethodOptions) => Promise<AssembledTransaction<null>>
+  init: ({wasm_hash}: {wasm_hash: Buffer}, options?: MethodOptions) => Promise<AssembledTransaction<null>>
 
   /**
    * Construct and simulate a create_escrow transaction. Returns an `AssembledTransaction` object which will have a `result` field containing the result of the simulation. If this transaction changes contract state, you will need to call `signAndSend()` on the returned object.
    */
-  create_escrow: ({client, freelancer, amount, token}: {client: string, freelancer: string, amount: i128, token: string}, options?: MethodOptions) => Promise<AssembledTransaction<Result<u64>>>
+  create_escrow: ({client, freelancer, amount, token}: {client: string, freelancer: string, amount: i128, token: string}, options?: MethodOptions) => Promise<AssembledTransaction<Result<string>>>
 
 }
 export class Client extends ContractClient {
@@ -85,9 +85,9 @@ export class Client extends ContractClient {
   }
   constructor(public readonly options: ContractClientOptions) {
     super(
-      new ContractSpec([ "AAAAAgAAAAAAAAAAAAAAB0RhdGFLZXkAAAAAAgAAAAAAAAAAAAAABU5vbmNlAAAAAAAAAAAAAAAAAAAORXNjcm93Q29udHJhY3QAAA==",
-        "AAAAAAAAAEZJbml0aWFsaXplIHRoZSBmYWN0b3J5IHdpdGggdGhlIGFkZHJlc3Mgb2YgdGhlIGVzY3JvdyBtYW5hZ2VyIGNvbnRyYWN0AAAAAAAEaW5pdAAAAAEAAAAAAAAAD2VzY3Jvd19jb250cmFjdAAAAAATAAAAAA==",
-        "AAAAAAAAAAAAAAANY3JlYXRlX2VzY3JvdwAAAAAAAAQAAAAAAAAABmNsaWVudAAAAAAAEwAAAAAAAAAKZnJlZWxhbmNlcgAAAAAAEwAAAAAAAAAGYW1vdW50AAAAAAALAAAAAAAAAAV0b2tlbgAAAAAAABMAAAABAAAD6QAAAAYAAAAD",
+      new ContractSpec([ "AAAAAgAAAAAAAAAAAAAAB0RhdGFLZXkAAAAAAgAAAAAAAAAAAAAABU5vbmNlAAAAAAAAAAAAAAAAAAAORXNjcm93V2FzbUhhc2gAAA==",
+        "AAAAAAAAAEBJbml0aWFsaXplIHRoZSBmYWN0b3J5IHdpdGggdGhlIFdBU00gaGFzaCBvZiB0aGUgZXNjcm93IGNvbnRyYWN0AAAABGluaXQAAAABAAAAAAAAAAl3YXNtX2hhc2gAAAAAAAPuAAAAIAAAAAA=",
+        "AAAAAAAAAAAAAAANY3JlYXRlX2VzY3JvdwAAAAAAAAQAAAAAAAAABmNsaWVudAAAAAAAEwAAAAAAAAAKZnJlZWxhbmNlcgAAAAAAEwAAAAAAAAAGYW1vdW50AAAAAAALAAAAAAAAAAV0b2tlbgAAAAAAABMAAAABAAAD6QAAABMAAAAD",
         "AAAAAQAAAAAAAAAAAAAABkVzY3JvdwAAAAAABgAAAAAAAAAGYW1vdW50AAAAAAALAAAAAAAAAAZjbGllbnQAAAAAABMAAAAAAAAACmZyZWVsYW5jZXIAAAAAABMAAAAAAAAAAmlkAAAAAAAGAAAAAAAAAAZzdGF0dXMAAAAAB9AAAAAMRXNjcm93U3RhdHVzAAAAAAAAAAV0b2tlbgAAAAAAABM=",
         "AAAAAgAAAAAAAAAAAAAADEVzY3Jvd1N0YXR1cwAAAAUAAAAAAAAAAAAAAAdDcmVhdGVkAAAAAAAAAAAAAAAABkZ1bmRlZAAAAAAAAAAAAAAAAAAIQWNjZXB0ZWQAAAAAAAAAAAAAAAhSZWxlYXNlZAAAAAAAAAAAAAAACFJlZnVuZGVk",
         "AAAABAAAAAAAAAAAAAAABUVycm9yAAAAAAAABQAAAAAAAAANTm90QXV0aG9yaXplZAAAAAAAAAEAAAAAAAAADkVzY3Jvd05vdEZvdW5kAAAAAAACAAAAAAAAAA1JbnZhbGlkU3RhdHVzAAAAAAAAAwAAAAAAAAAMQW1vdW50VG9vTG93AAAABAAAAAAAAAAOVHJhbnNmZXJGYWlsZWQAAAAAAAU=" ]),
@@ -96,6 +96,6 @@ export class Client extends ContractClient {
   }
   public readonly fromJSON = {
     init: this.txFromJSON<null>,
-        create_escrow: this.txFromJSON<Result<u64>>
+        create_escrow: this.txFromJSON<Result<string>>
   }
 }

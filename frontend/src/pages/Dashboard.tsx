@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useWallet } from '../hooks/useWallet';
 import { ShieldCheck, Plus, Search, Clock, CheckCircle, Lock, SearchX } from 'lucide-react';
-import { escrowContract } from '../services/stellar';
+import { getEscrowContract } from '../services/stellar';
 import { RecentActivity } from '../components/RecentActivity';
 import { AlertMessage } from '../components/common/AlertMessage';
 import { EmptyState } from '../components/common/EmptyState';
@@ -22,7 +22,8 @@ export const Dashboard: React.FC = () => {
     if (!searchId) return;
 
     try {
-      const result = await escrowContract.get_escrow({ escrow_id: BigInt(searchId) });
+      const contract = getEscrowContract(searchId);
+      const result = await contract.get_escrow();
       const { result: escrowData } = await result.simulate();
       if (escrowData) {
         setQueriedEscrow(escrowData as unknown as EscrowData);
@@ -101,7 +102,7 @@ export const Dashboard: React.FC = () => {
               <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
-                placeholder="Escrow ID (e.g. 1)"
+                placeholder="Escrow Address (C...)"
                 value={searchId}
                 onChange={(e) => setSearchId(e.target.value)}
                 className="w-full pl-9 pr-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
@@ -131,7 +132,7 @@ export const Dashboard: React.FC = () => {
                 <p className="text-sm"><span className="font-medium text-slate-500">Amount:</span> <span className="font-semibold text-slate-900">{stroopsToXlm(queriedEscrow.amount)} XLM</span></p>
               </div>
               <Link 
-                to={`/escrow/${queriedEscrow.id?.toString()}`}
+                to={`/escrow/${searchId}`}
                 className="w-full block text-center bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 rounded-lg transition-colors"
               >
                 Manage Escrow &rarr;

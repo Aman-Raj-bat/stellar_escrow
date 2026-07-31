@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { escrowContract, ensureWalletConnection } from '../services/stellar';
+import { getEscrowContract, ensureWalletConnection } from '../services/stellar';
 
 export type EscrowStatusTag = 'Created' | 'Funded' | 'Accepted' | 'Released' | 'Refunded';
 
@@ -23,8 +23,8 @@ export function useEscrow(escrowId?: string) {
     try {
       setIsLoading(true);
       setError(null);
-      const idBigInt = BigInt(escrowId);
-      const { result } = await escrowContract.get_escrow({ escrow_id: idBigInt });
+      const contract = getEscrowContract(escrowId);
+      const { result } = await contract.get_escrow();
       
       if (result) {
         setEscrow(result as unknown as EscrowData);
@@ -48,7 +48,7 @@ export function useEscrow(escrowId?: string) {
   }, [fetchEscrow]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const executeAction = async (actionName: string, actionFn: (id: bigint) => Promise<any>) => {
+  const executeAction = async (actionName: string, actionFn: (contract: any) => Promise<any>) => {
     if (!escrowId) {
       setError('No escrow ID provided.');
       return false;
@@ -60,9 +60,9 @@ export function useEscrow(escrowId?: string) {
 
     try {
       await ensureWalletConnection();
-      const idBigInt = BigInt(escrowId);
+      const contract = getEscrowContract(escrowId);
       
-      const tx = await actionFn(idBigInt);
+      const tx = await actionFn(contract);
       const result = await tx.signAndSend();
       
       // Update transaction hash if available from Freighter response
@@ -86,10 +86,10 @@ export function useEscrow(escrowId?: string) {
     }
   };
 
-  const deposit = () => executeAction('deposit', (escrow_id) => escrowContract.deposit({ escrow_id }));
-  const accept = () => executeAction('accept', (escrow_id) => escrowContract.accept({ escrow_id }));
-  const release = () => executeAction('release', (escrow_id) => escrowContract.release({ escrow_id }));
-  const refund = () => executeAction('refund', (escrow_id) => escrowContract.refund({ escrow_id }));
+  const deposit = () => executeAction('deposit', (contract) => contract.deposit());
+  const accept = () => executeAction('accept', (contract) => contract.accept());
+  const release = () => executeAction('release', (contract) => contract.release());
+  const refund = () => executeAction('refund', (contract) => contract.refund());
 
   const currentStatus = escrow?.status ? Object.keys(escrow.status)[0] as EscrowStatusTag : null;
 

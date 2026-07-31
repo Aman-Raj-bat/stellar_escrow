@@ -38,18 +38,20 @@ export const CreateEscrow: React.FC = () => {
       const stroopsAmount = xlmToStroops(amount);
 
       // Call the create_escrow function on Factory
-      const result = await factoryContract.create_escrow({
+      const tx = await factoryContract.create_escrow({
         client: address,
         freelancer,
         amount: stroopsAmount,
         token,
       });
 
-      // The result would have the escrow ID (or we can simulate it)
-      // Wait for it to be mined
-      await result.signAndSend();
+      // Get the returned address from the simulation result
+      const escrowAddress = tx.result.unwrap();
 
-      navigate('/dashboard');
+      // Wait for it to be mined
+      await tx.signAndSend();
+
+      navigate(`/escrow/${escrowAddress}`);
     } catch (err: unknown) {
       console.error(err);
       const errorMessage = err instanceof Error ? err.message : String(err);

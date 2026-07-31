@@ -1,5 +1,5 @@
 import { rpc } from '../contracts/escrow';
-import { scValToNative } from '@stellar/stellar-sdk';
+import { scValToNative, xdr } from '@stellar/stellar-sdk';
 import { rpcUrl } from './stellar';
 
 export type ActivityEventType = 'CREATED' | 'FUNDED' | 'ACCEPTED' | 'RELEASED' | 'REFUNDED' | 'UNKNOWN';
@@ -7,20 +7,17 @@ export type ActivityEventType = 'CREATED' | 'FUNDED' | 'ACCEPTED' | 'RELEASED' |
 export interface ActivityEvent {
   id: string;
   type: ActivityEventType;
-  escrowId: string;
+  escrowId: string; // Now represents the Contract Address
   txHash: string;
   timestamp: Date;
   ledger: number;
-  actor?: string; // The wallet that likely triggered this or is relevant (client/freelancer)
+  actor?: string;
 }
 
 const server = new rpc.Server(rpcUrl);
 
 export async function fetchContractEvents(escrowId?: string): Promise<ActivityEvent[]> {
   try {
-    // Some networks have startLedger limitations, if we get an error we might have to adjust.
-    // We'll just fetch a generous amount from the current ledger minus 17280 (approx 1 day on Stellar if 5s ledgers).
-    // Let's actually use getLatestLedger
     const latestLedgerResponse = await server.getLatestLedger();
     const latestLedger = latestLedgerResponse.sequence;
     const startLedger = Math.max(1, latestLedger - 17280); 
@@ -31,14 +28,19 @@ export async function fetchContractEvents(escrowId?: string): Promise<ActivityEv
       filters: [
         {
           type: "contract",
-          contractIds: [import.meta.env.VITE_CONTRACT_ID || 'CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KB'],
+          contractIds: escrowId ? [escrowId] : [], // Empty array fetches from all contracts on testnet
           topics: [
-            // match events where topic 0 is 'ESCROW' symbol. We can leave it open to catch everything for the contract
+            // match events where topic 0 is 'ESCROW' symbol.
           ]
         }
       ],
-      limit: 100, // max allowed usually
+      limit: 100,
     };
+
+    if (!escrowId) {
+      // If we are querying all escrows, we MUST add a topic filter so we don't query everything on the network
+      request.filters[0].topics = [[xdr.ScVal.scvSymbol('ESCROW').toXDR('base64')]];
+    }
 
     const response = await server.getEvents(request);
 
@@ -48,16 +50,18 @@ export async function fetchContractEvents(escrowId?: string): Promise<ActivityEv
       for (const event of response.events) {
         if (event.type !== 'contract') continue;
 
-        const topicValues = event.topic; // In newer stellar-sdk, these are already xdr.ScVal
+        const topicValues = event.topic;
         if (topicValues.length < 3) continue;
 
         const mainTopic = scValToNative(topicValues[0]);
         if (mainTopic !== 'ESCROW') continue;
 
         const typeTopic = scValToNative(topicValues[1]) as string;
-        const eventEscrowId = scValToNative(topicValues[2]).toString();
+        
+        // The contract address that emitted the event
+        const eventEscrowId = typeof event.contractId === 'string' ? event.contractId : (event.contractId as any)?.contractId() || (event.contractId as any)?.toString() || "";
 
-        // If filtering by escrow ID
+        // If filtering by escrow ID, we don't need to manually check since we provided contractIds, but just to be safe:
         if (escrowId && eventEscrowId !== escrowId) {
           continue;
         }

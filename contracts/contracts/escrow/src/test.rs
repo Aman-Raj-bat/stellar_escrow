@@ -34,33 +34,33 @@ fn test_escrow_flow() {
     let escrow_id = 1u64;
     escrow_client.init_escrow(&escrow_id, &client, &freelancer, &amount, &token_id);
 
-    let mut escrow = escrow_client.get_escrow(&escrow_id);
+    let mut escrow = escrow_client.get_escrow();
     assert_eq!(escrow.status, EscrowStatus::Created);
 
     // 2. Deposit Funds
-    escrow_client.deposit(&escrow_id);
+    escrow_client.deposit();
     
     // Verify funds moved from client to contract
     let token_c = token::Client::new(&env, &token_id);
     assert_eq!(token_c.balance(&client), 500);
     assert_eq!(token_c.balance(&contract_id), 500);
     
-    escrow = escrow_client.get_escrow(&escrow_id);
+    escrow = escrow_client.get_escrow();
     assert_eq!(escrow.status, EscrowStatus::Funded);
 
     // 3. Accept Escrow
-    escrow_client.accept(&escrow_id);
+    escrow_client.accept();
     
-    escrow = escrow_client.get_escrow(&escrow_id);
+    escrow = escrow_client.get_escrow();
     assert_eq!(escrow.status, EscrowStatus::Accepted);
 
     // 4. Release Funds
-    escrow_client.release(&escrow_id);
+    escrow_client.release();
 
     // Verify funds moved from contract to freelancer
     assert_eq!(token_c.balance(&contract_id), 0);
     assert_eq!(token_c.balance(&freelancer), 500);
 
-    escrow = escrow_client.get_escrow(&escrow_id);
+    escrow = escrow_client.get_escrow();
     assert_eq!(escrow.status, EscrowStatus::Released);
 }

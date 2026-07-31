@@ -10,39 +10,44 @@ fi
 
 cd contracts
 
+# Use stellar or soroban cli
+CLI="stellar"
+if ! command -v stellar &> /dev/null; then
+    CLI="soroban"
+fi
+
 echo "Building contracts..."
 cargo build --target wasm32v1-none --release
 
 echo "Optimizing Escrow Contract..."
-soroban contract optimize --wasm target/wasm32v1-none/release/trustpay_escrow.wasm
+$CLI contract optimize --wasm target/wasm32v1-none/release/trustpay_escrow.wasm
 echo "Optimizing Factory Contract..."
-soroban contract optimize --wasm target/wasm32v1-none/release/trustpay_factory.wasm
+$CLI contract optimize --wasm target/wasm32v1-none/release/trustpay_factory.wasm
 
-echo "Deploying Escrow Contract..."
-ESCROW_ID=$(soroban contract deploy \
+echo "Installing Escrow Contract WASM..."
+ESCROW_WASM_HASH=$($CLI contract install \
   --wasm target/wasm32v1-none/release/trustpay_escrow.optimized.wasm \
   --source default \
   --network testnet)
-echo "Escrow deployed at: $ESCROW_ID"
+echo "Escrow WASM installed with hash: $ESCROW_WASM_HASH"
 
 echo "Deploying Factory Contract..."
-FACTORY_ID=$(soroban contract deploy \
+FACTORY_ID=$($CLI contract deploy \
   --wasm target/wasm32v1-none/release/trustpay_factory.optimized.wasm \
   --source default \
   --network testnet)
 echo "Factory deployed at: $FACTORY_ID"
 
-echo "Initializing Factory with Escrow address..."
-soroban contract invoke \
+echo "Initializing Factory with Escrow WASM hash..."
+$CLI contract invoke \
   --id $FACTORY_ID \
   --source default \
   --network testnet \
   -- \
   init \
-  --escrow_contract $ESCROW_ID
+  --wasm_hash $ESCROW_WASM_HASH
 
 echo ""
 echo "Deployments successful!"
 echo "Update your .env file with the following:"
-echo "VITE_CONTRACT_ID=$ESCROW_ID"
 echo "VITE_FACTORY_CONTRACT_ID=$FACTORY_ID"

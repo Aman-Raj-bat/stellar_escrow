@@ -26,7 +26,7 @@ export function useActivity(escrowId?: string, pollIntervalMs: number = 30000) {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchActivities();
     
-    let interval: NodeJS.Timeout | null = null;
+    let interval: ReturnType<typeof setTimeout> | null = null;
 
     const startPolling = () => {
       if (interval) return;

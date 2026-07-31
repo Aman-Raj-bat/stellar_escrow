@@ -3,11 +3,6 @@
 use super::*;
 use soroban_sdk::{testutils::Address as _, Address, Env, token};
 use trustpay_shared::types::EscrowStatus;
-
-// To test cross-contract calls, we need to register both contracts in the environment.
-// Since we don't have access to the escrow WASM in the factory tests directly unless we import it,
-// we can use the `contractimport` or just register the Rust type directly.
-// The easiest way is to register the `TrustPayEscrow` contract from the other crate.
 use trustpay_escrow::{TrustPayEscrow, TrustPayEscrowClient};
 
 #[test]
@@ -15,16 +10,16 @@ fn test_factory_creates_escrow() {
     let env = Env::default();
     env.mock_all_auths();
 
-    // Register Escrow contract
-    let escrow_contract_id = env.register(TrustPayEscrow, ());
-    let escrow_client = TrustPayEscrowClient::new(&env, &escrow_contract_id);
-
     // Register Factory contract
     let factory_contract_id = env.register(TrustPayFactory, ());
     let factory_client = TrustPayFactoryClient::new(&env, &factory_contract_id);
 
+    // Upload Escrow WASM using compiled bytes
+    let wasm_bytes = include_bytes!("../../../target/wasm32v1-none/release/trustpay_escrow.wasm");
+    let wasm_hash = env.deployer().upload_contract_wasm(wasm_bytes.as_slice());
+
     // Initialize Factory
-    factory_client.init(&escrow_contract_id);
+    factory_client.init(&wasm_hash);
 
     // Setup actors and token
     let client = Address::generate(&env);
@@ -41,10 +36,10 @@ fn test_factory_creates_escrow() {
 
     // Create Escrow via Factory
     let escrow_id = factory_client.create_escrow(&client, &freelancer, &amount, &token_contract_id);
-    assert_eq!(escrow_id, 1);
 
-    // Verify state in Escrow contract
-    let escrow = escrow_client.get_escrow(&escrow_id);
+    // Verify state in Escrow contract using the new escrow_id (which is an Address)
+    let escrow_client = TrustPayEscrowClient::new(&env, &escrow_id);
+    let escrow = escrow_client.get_escrow();
     assert_eq!(escrow.id, 1);
     assert_eq!(escrow.client, client);
     assert_eq!(escrow.freelancer, freelancer);

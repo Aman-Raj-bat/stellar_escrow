@@ -33,7 +33,7 @@ if (typeof window !== "undefined") {
 
 
 
-export type DataKey = {tag: "Escrow", values: readonly [u64]};
+export type DataKey = {tag: "Escrow", values: void};
 
 
 export interface Escrow {
@@ -60,31 +60,31 @@ export interface Client {
    * Construct and simulate a accept transaction. Returns an `AssembledTransaction` object which will have a `result` field containing the result of the simulation. If this transaction changes contract state, you will need to call `signAndSend()` on the returned object.
    * Freelancer accepts the escrow, agreeing to start work.
    */
-  accept: ({escrow_id}: {escrow_id: u64}, options?: MethodOptions) => Promise<AssembledTransaction<Result<void>>>
+  accept: (options?: MethodOptions) => Promise<AssembledTransaction<Result<void>>>
 
   /**
    * Construct and simulate a refund transaction. Returns an `AssembledTransaction` object which will have a `result` field containing the result of the simulation. If this transaction changes contract state, you will need to call `signAndSend()` on the returned object.
    * Freelancer refunds the client, returning funds to the client.
    */
-  refund: ({escrow_id}: {escrow_id: u64}, options?: MethodOptions) => Promise<AssembledTransaction<Result<void>>>
+  refund: (options?: MethodOptions) => Promise<AssembledTransaction<Result<void>>>
 
   /**
    * Construct and simulate a deposit transaction. Returns an `AssembledTransaction` object which will have a `result` field containing the result of the simulation. If this transaction changes contract state, you will need to call `signAndSend()` on the returned object.
    * Deposits funds into the escrow contract, moving it from `Created` to `Funded`.
    */
-  deposit: ({escrow_id}: {escrow_id: u64}, options?: MethodOptions) => Promise<AssembledTransaction<Result<void>>>
+  deposit: (options?: MethodOptions) => Promise<AssembledTransaction<Result<void>>>
 
   /**
    * Construct and simulate a release transaction. Returns an `AssembledTransaction` object which will have a `result` field containing the result of the simulation. If this transaction changes contract state, you will need to call `signAndSend()` on the returned object.
    * Client releases funds to the freelancer after work is completed.
    */
-  release: ({escrow_id}: {escrow_id: u64}, options?: MethodOptions) => Promise<AssembledTransaction<Result<void>>>
+  release: (options?: MethodOptions) => Promise<AssembledTransaction<Result<void>>>
 
   /**
    * Construct and simulate a get_escrow transaction. Returns an `AssembledTransaction` object which will have a `result` field containing the result of the simulation. If this transaction changes contract state, you will need to call `signAndSend()` on the returned object.
    * Queries the status and details of an escrow
    */
-  get_escrow: ({escrow_id}: {escrow_id: u64}, options?: MethodOptions) => Promise<AssembledTransaction<Result<Escrow>>>
+  get_escrow: (options?: MethodOptions) => Promise<AssembledTransaction<Result<Escrow>>>
 
   /**
    * Construct and simulate a init_escrow transaction. Returns an `AssembledTransaction` object which will have a `result` field containing the result of the simulation. If this transaction changes contract state, you will need to call `signAndSend()` on the returned object.
@@ -110,12 +110,12 @@ export class Client extends ContractClient {
   }
   constructor(public readonly options: ContractClientOptions) {
     super(
-      new ContractSpec([ "AAAAAgAAAAAAAAAAAAAAB0RhdGFLZXkAAAAAAQAAAAEAAAAAAAAABkVzY3JvdwAAAAAAAQAAAAY=",
-        "AAAAAAAAADZGcmVlbGFuY2VyIGFjY2VwdHMgdGhlIGVzY3JvdywgYWdyZWVpbmcgdG8gc3RhcnQgd29yay4AAAAAAAZhY2NlcHQAAAAAAAEAAAAAAAAACWVzY3Jvd19pZAAAAAAAAAYAAAABAAAD6QAAAAIAAAAD",
-        "AAAAAAAAAD1GcmVlbGFuY2VyIHJlZnVuZHMgdGhlIGNsaWVudCwgcmV0dXJuaW5nIGZ1bmRzIHRvIHRoZSBjbGllbnQuAAAAAAAABnJlZnVuZAAAAAAAAQAAAAAAAAAJZXNjcm93X2lkAAAAAAAABgAAAAEAAAPpAAAAAgAAAAM=",
-        "AAAAAAAAAE5EZXBvc2l0cyBmdW5kcyBpbnRvIHRoZSBlc2Nyb3cgY29udHJhY3QsIG1vdmluZyBpdCBmcm9tIGBDcmVhdGVkYCB0byBgRnVuZGVkYC4AAAAAAAdkZXBvc2l0AAAAAAEAAAAAAAAACWVzY3Jvd19pZAAAAAAAAAYAAAABAAAD6QAAAAIAAAAD",
-        "AAAAAAAAAEBDbGllbnQgcmVsZWFzZXMgZnVuZHMgdG8gdGhlIGZyZWVsYW5jZXIgYWZ0ZXIgd29yayBpcyBjb21wbGV0ZWQuAAAAB3JlbGVhc2UAAAAAAQAAAAAAAAAJZXNjcm93X2lkAAAAAAAABgAAAAEAAAPpAAAAAgAAAAM=",
-        "AAAAAAAAACtRdWVyaWVzIHRoZSBzdGF0dXMgYW5kIGRldGFpbHMgb2YgYW4gZXNjcm93AAAAAApnZXRfZXNjcm93AAAAAAABAAAAAAAAAAllc2Nyb3dfaWQAAAAAAAAGAAAAAQAAA+kAAAfQAAAABkVzY3JvdwAAAAAAAw==",
+      new ContractSpec([ "AAAAAgAAAAAAAAAAAAAAB0RhdGFLZXkAAAAAAQAAAAAAAAAAAAAABkVzY3JvdwAA",
+        "AAAAAAAAADZGcmVlbGFuY2VyIGFjY2VwdHMgdGhlIGVzY3JvdywgYWdyZWVpbmcgdG8gc3RhcnQgd29yay4AAAAAAAZhY2NlcHQAAAAAAAAAAAABAAAD6QAAAAIAAAAD",
+        "AAAAAAAAAD1GcmVlbGFuY2VyIHJlZnVuZHMgdGhlIGNsaWVudCwgcmV0dXJuaW5nIGZ1bmRzIHRvIHRoZSBjbGllbnQuAAAAAAAABnJlZnVuZAAAAAAAAAAAAAEAAAPpAAAAAgAAAAM=",
+        "AAAAAAAAAE5EZXBvc2l0cyBmdW5kcyBpbnRvIHRoZSBlc2Nyb3cgY29udHJhY3QsIG1vdmluZyBpdCBmcm9tIGBDcmVhdGVkYCB0byBgRnVuZGVkYC4AAAAAAAdkZXBvc2l0AAAAAAAAAAABAAAD6QAAAAIAAAAD",
+        "AAAAAAAAAEBDbGllbnQgcmVsZWFzZXMgZnVuZHMgdG8gdGhlIGZyZWVsYW5jZXIgYWZ0ZXIgd29yayBpcyBjb21wbGV0ZWQuAAAAB3JlbGVhc2UAAAAAAAAAAAEAAAPpAAAAAgAAAAM=",
+        "AAAAAAAAACtRdWVyaWVzIHRoZSBzdGF0dXMgYW5kIGRldGFpbHMgb2YgYW4gZXNjcm93AAAAAApnZXRfZXNjcm93AAAAAAAAAAAAAQAAA+kAAAfQAAAABkVzY3JvdwAAAAAAAw==",
         "AAAAAAAAACNJbml0aWFsaXplcyBhIG5ldyBlc2Nyb3cgYWdyZWVtZW50LgAAAAALaW5pdF9lc2Nyb3cAAAAABQAAAAAAAAACaWQAAAAAAAYAAAAAAAAABmNsaWVudAAAAAAAEwAAAAAAAAAKZnJlZWxhbmNlcgAAAAAAEwAAAAAAAAAGYW1vdW50AAAAAAALAAAAAAAAAAV0b2tlbgAAAAAAABMAAAABAAAD6QAAAAIAAAAD",
         "AAAAAQAAAAAAAAAAAAAABkVzY3JvdwAAAAAABgAAAAAAAAAGYW1vdW50AAAAAAALAAAAAAAAAAZjbGllbnQAAAAAABMAAAAAAAAACmZyZWVsYW5jZXIAAAAAABMAAAAAAAAAAmlkAAAAAAAGAAAAAAAAAAZzdGF0dXMAAAAAB9AAAAAMRXNjcm93U3RhdHVzAAAAAAAAAAV0b2tlbgAAAAAAABM=",
         "AAAAAgAAAAAAAAAAAAAADEVzY3Jvd1N0YXR1cwAAAAUAAAAAAAAAAAAAAAdDcmVhdGVkAAAAAAAAAAAAAAAABkZ1bmRlZAAAAAAAAAAAAAAAAAAIQWNjZXB0ZWQAAAAAAAAAAAAAAAhSZWxlYXNlZAAAAAAAAAAAAAAACFJlZnVuZGVk",
