@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useActivity } from '../hooks/useActivity';
 import { ExternalLink, Copy } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
@@ -9,9 +9,15 @@ import { AlertMessage } from './common/AlertMessage';
 import { useClipboard } from '../hooks/useClipboard';
 import { formatAddress } from '../utils/formatters';
 
-export const ActivityTimeline: React.FC<{ escrowId: string }> = ({ escrowId }) => {
-  const { activities, isLoading, error } = useActivity(escrowId);
+export const ActivityTimeline: React.FC<{ escrowId: string, refreshTrigger?: number }> = ({ escrowId, refreshTrigger = 0 }) => {
+  const { activities, isLoading, error, refetch } = useActivity(escrowId);
   const { hasCopied, copyToClipboard } = useClipboard();
+
+  useEffect(() => {
+    if (refreshTrigger > 0) {
+      refetch(true); // silent refetch
+    }
+  }, [refreshTrigger, refetch]);
 
   if (error) {
     return (

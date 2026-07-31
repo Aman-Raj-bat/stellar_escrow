@@ -50,6 +50,7 @@ describe('CreateEscrow', () => {
     
     const mockSignAndSend = vi.fn().mockResolvedValue(true);
     (factoryContract.create_escrow as any).mockResolvedValue({
+      result: { unwrap: () => 'C_NEW_ESCROW_ADDRESS' },
       signAndSend: mockSignAndSend
     });
 
@@ -79,4 +80,55 @@ describe('CreateEscrow', () => {
       expect(mockSignAndSend).toHaveBeenCalled();
     });
   });
+
+  it('shows error for invalid address', async () => {
+    vi.spyOn(useWalletHook, 'useWallet').mockReturnValue({ address: 'G_CLIENT_ADDRESS' } as any);
+
+    render(
+      <MemoryRouter>
+        <CreateEscrow />
+      </MemoryRouter>
+    );
+
+    fireEvent.change(screen.getByPlaceholderText('G...'), {
+      target: { value: 'INVALID_ADDRESS_FORMAT' }
+    });
+
+    fireEvent.change(screen.getByPlaceholderText('100.00'), {
+      target: { value: '100' }
+    });
+
+    const form = screen.getByRole('button', { name: /Lock Funds & Create Escrow/i }).closest('form')!;
+    fireEvent.submit(form);
+
+    await waitFor(() => {
+      expect(screen.getByText('Invalid Stellar address format.')).toBeInTheDocument();
+    });
+  });
+
+  it('shows error for zero or negative amount', async () => {
+    vi.spyOn(useWalletHook, 'useWallet').mockReturnValue({ address: 'G_CLIENT_ADDRESS' } as any);
+
+    render(
+      <MemoryRouter>
+        <CreateEscrow />
+      </MemoryRouter>
+    );
+
+    fireEvent.change(screen.getByPlaceholderText('G...'), {
+      target: { value: 'GA7QYNF7SOWQ3GLR2B6RS22RCZB4Z2Z4YI2VMB7T4P2B6Y64K6T34K3Q' }
+    });
+
+    fireEvent.change(screen.getByPlaceholderText('100.00'), {
+      target: { value: '0' }
+    });
+
+    const form = screen.getByRole('button', { name: /Lock Funds & Create Escrow/i }).closest('form')!;
+    fireEvent.submit(form);
+
+    await waitFor(() => {
+      expect(screen.getByText('Amount must be greater than 0.')).toBeInTheDocument();
+    });
+  });
 });
+

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useWallet } from '../hooks/useWallet';
 import { useEscrow } from '../hooks/useEscrow';
@@ -13,6 +13,12 @@ export const EscrowDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { address } = useWallet();
   const { escrow, isLoading, error, txHash, currentStatus, deposit, accept, release, refund } = useEscrow(id);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  const handleAction = async (actionFn: () => Promise<boolean>) => {
+    const success = await actionFn();
+    if (success) setRefreshTrigger(prev => prev + 1);
+  };
 
   if (!id) {
     return <div className="text-center py-12">Invalid Escrow ID</div>;
@@ -132,7 +138,7 @@ export const EscrowDetail: React.FC = () => {
                     <div className="flex flex-col gap-3">
                       {isClient && currentStatus === 'Created' && (
                         <button
-                          onClick={deposit}
+                          onClick={() => handleAction(deposit)}
                           disabled={isLoading}
                           className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-sm flex justify-center items-center gap-2"
                         >
@@ -142,7 +148,7 @@ export const EscrowDetail: React.FC = () => {
 
                       {isFreelancer && currentStatus === 'Funded' && (
                         <button
-                          onClick={accept}
+                          onClick={() => handleAction(accept)}
                           disabled={isLoading}
                           className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-sm flex justify-center items-center gap-2"
                         >
@@ -152,7 +158,7 @@ export const EscrowDetail: React.FC = () => {
 
                       {isClient && currentStatus === 'Accepted' && (
                         <button
-                          onClick={release}
+                          onClick={() => handleAction(release)}
                           disabled={isLoading}
                           className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-sm flex justify-center items-center gap-2"
                         >
@@ -162,7 +168,7 @@ export const EscrowDetail: React.FC = () => {
 
                       {isFreelancer && (currentStatus === 'Funded' || currentStatus === 'Accepted') && (
                         <button
-                          onClick={refund}
+                          onClick={() => handleAction(refund)}
                           disabled={isLoading}
                           className="w-full bg-amber-500 hover:bg-amber-600 disabled:bg-amber-400 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-sm flex justify-center items-center gap-2 mt-2"
                         >
@@ -191,7 +197,7 @@ export const EscrowDetail: React.FC = () => {
         )}
       </div>
       
-      <ActivityTimeline escrowId={id} />
+      <ActivityTimeline escrowId={id} refreshTrigger={refreshTrigger} />
     </div>
   );
 };

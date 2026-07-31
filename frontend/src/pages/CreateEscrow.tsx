@@ -29,7 +29,12 @@ export const CreateEscrow: React.FC = () => {
 
     try {
       if (!freelancer.startsWith('G') || freelancer.length !== 56) {
-        throw new Error('Invalid Stellar address for freelancer.');
+        throw new Error('Invalid Stellar address format.');
+      }
+      
+      const numAmount = parseFloat(amount);
+      if (isNaN(numAmount) || numAmount <= 0) {
+        throw new Error('Amount must be greater than 0.');
       }
 
       await ensureWalletConnection();
