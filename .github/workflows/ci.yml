@@ -1,49 +1,98 @@
-name: CI
+name: CI Pipeline
 
 on:
   push:
-    branches: [ "main", "develop" ]
+    branches:
+      - main
+      - develop
   pull_request:
-    branches: [ "main", "develop" ]
+    branches:
+      - main
+      - develop
 
 jobs:
-  rust-tests:
-    name: Rust Contract Tests
+  repository-validation:
+    name: Repository Validation
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Set up Rust
+      - name: Verify Required Files Exist
+        run: |
+          REQUIRED_FILES=("README.md" "LICENSE" ".gitignore" ".env.example")
+          MISSING_FILES=()
+
+          for file in "${REQUIRED_FILES[@]}"; do
+            if [ ! -f "$file" ]; then
+              MISSING_FILES+=("$file")
+            fi
+          done
+
+          if [ ${#MISSING_FILES[@]} -ne 0 ]; then
+            echo "Error: The following required files are missing:"
+            for file in "${MISSING_FILES[@]}"; do
+              echo "  - $file"
+            done
+            exit 1
+          else
+            echo "All required files are present."
+          fi
+
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+          cache: 'npm'
+          cache-dependency-path: './frontend/package-lock.json'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Run TypeScript type checking
+        run: npx tsc -b
+
+      - name: Run Vitest
+        run: npm run test
+
+      - name: Run production build
+        run: npm run build
+
+  smart-contracts:
+    name: Smart Contracts
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./contracts
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: wasm32v1-none
+          targets: wasm32-unknown-unknown
 
-      - name: Install Soroban CLI
-        run: cargo install --locked soroban-cli
-
-      - name: Build Contracts
-        run: cargo build --target wasm32v1-none --release
-        working-directory: ./contracts
-
-      - name: Run Contract Tests
-        run: cargo test
-        working-directory: ./contracts
-
-  frontend-tests:
-    name: Frontend Tests
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
+      - name: Cache Cargo dependencies
+        uses: Swatinem/rust-cache@v2
         with:
-          node-version: '20'
+          workspaces: ./contracts
 
-      - name: Install dependencies
-        run: npm ci
-        working-directory: ./frontend
+      - name: Verify compilation succeeds (Build Contracts)
+        run: cargo build --target wasm32-unknown-unknown --release
 
-      - name: Run Tests
-        run: npm test
-        working-directory: ./frontend
+      - name: Execute cargo test
+        run: cargo test
