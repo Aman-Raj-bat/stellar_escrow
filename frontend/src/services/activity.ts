@@ -1,5 +1,4 @@
-import { rpc } from '../contracts/escrow';
-import { scValToNative, xdr } from '@stellar/stellar-sdk';
+import { scValToNative, xdr, rpc } from '@stellar/stellar-sdk';
 import { rpcUrl } from './stellar';
 
 export type ActivityEventType = 'CREATED' | 'FUNDED' | 'ACCEPTED' | 'RELEASED' | 'REFUNDED' | 'UNKNOWN';

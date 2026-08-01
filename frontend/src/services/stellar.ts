@@ -37,7 +37,7 @@ export function getEscrowContract(contractId: string) {
 
 export const factoryContract = new FactoryClient({
   networkPassphrase: 'Test SDF Network ; September 2015',
-  contractId: import.meta.env.VITE_FACTORY_CONTRACT_ID || 'CBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KB',
+  contractId: import.meta.env.VITE_CONTRACT_ID || 'CBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KB',
   rpcUrl,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   signTransaction: async (tx: any, opts?: any) => {

@@ -48,7 +48,7 @@ export function useEscrow(escrowId?: string) {
   }, [fetchEscrow]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const executeAction = async (actionName: string, actionFn: (contract: any) => Promise<any>) => {
+  const executeAction = async (actionName: string, actionFn: (contract: any, address: string) => Promise<any>) => {
     if (!escrowId) {
       setError('No escrow ID provided.');
       return false;
@@ -59,10 +59,10 @@ export function useEscrow(escrowId?: string) {
     setTxHash(null);
 
     try {
-      await ensureWalletConnection();
+      const address = await ensureWalletConnection();
       const contract = getEscrowContract(escrowId);
       
-      const tx = await actionFn(contract);
+      const tx = await actionFn(contract, address);
       const result = await tx.signAndSend();
       
       // Update transaction hash if available from Freighter response
@@ -86,10 +86,10 @@ export function useEscrow(escrowId?: string) {
     }
   };
 
-  const deposit = () => executeAction('deposit', (contract) => contract.deposit());
-  const accept = () => executeAction('accept', (contract) => contract.accept());
-  const release = () => executeAction('release', (contract) => contract.release());
-  const refund = () => executeAction('refund', (contract) => contract.refund());
+  const deposit = () => executeAction('deposit', (contract, address) => contract.deposit({ publicKey: address }));
+  const accept = () => executeAction('accept', (contract, address) => contract.accept({ publicKey: address }));
+  const release = () => executeAction('release', (contract, address) => contract.release({ publicKey: address }));
+  const refund = () => executeAction('refund', (contract, address) => contract.refund({ publicKey: address }));
 
   const currentStatus = escrow?.status ? Object.keys(escrow.status)[0] as EscrowStatusTag : null;
 

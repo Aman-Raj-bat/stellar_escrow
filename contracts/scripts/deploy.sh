@@ -6,40 +6,32 @@ echo "Starting TrustPay Smart Contract Deployment..."
 # Ensure we are in the contracts directory
 cd "$(dirname "$0")/.." || exit
 
-# 1. Build the contracts
-echo "Building contracts..."
-cargo build --target wasm32-unknown-unknown --release
-
-# 2. Optimize the contracts (Requires stellar-cli)
-echo "Optimizing Escrow Wasm..."
-stellar contract optimize \
-  --wasm target/wasm32-unknown-unknown/release/trustpay_escrow.wasm \
-  --out-dir target/wasm32-unknown-unknown/release/
-
-echo "Optimizing Factory Wasm..."
-stellar contract optimize \
-  --wasm target/wasm32-unknown-unknown/release/trustpay_factory.wasm \
-  --out-dir target/wasm32-unknown-unknown/release/
+# 1 & 2. Build and Optimize the contracts
+# In Stellar CLI v27+, 'stellar contract optimize' is deprecated.
+# 'stellar contract build' handles both compiling (to wasm32v1-none) and optimizing.
+echo "Building and optimizing contracts..."
+stellar contract build
 
 # Configuration variables
 NETWORK="testnet"
 SOURCE_ACCOUNT="default" # Assumes 'default' identity is configured in stellar-cli
 
-# 3. Install the Escrow contract (We just need its hash for the factory)
-echo "Installing Escrow contract..."
-WASM_HASH=$(stellar contract install \
-  --wasm target/wasm32-unknown-unknown/release/trustpay_escrow.optimized.wasm \
+# 3. Upload the Escrow contract (Previously 'install')
+# 'stellar contract install' is deprecated in favor of 'stellar contract upload'.
+echo "Uploading Escrow contract..."
+WASM_HASH=$(stellar contract upload \
+  --wasm target/wasm32v1-none/release/trustpay_escrow.wasm \
   --network $NETWORK \
-  --source $SOURCE_ACCOUNT)
+  --source-account $SOURCE_ACCOUNT)
 
 echo "Escrow Wasm Hash: $WASM_HASH"
 
 # 4. Deploy the Factory contract
 echo "Deploying Factory contract..."
 FACTORY_ID=$(stellar contract deploy \
-  --wasm target/wasm32-unknown-unknown/release/trustpay_factory.optimized.wasm \
+  --wasm target/wasm32v1-none/release/trustpay_factory.wasm \
   --network $NETWORK \
-  --source $SOURCE_ACCOUNT)
+  --source-account $SOURCE_ACCOUNT)
 
 echo "Factory Contract ID: $FACTORY_ID"
 
@@ -48,7 +40,7 @@ echo "Initializing Factory contract..."
 stellar contract invoke \
   --id "$FACTORY_ID" \
   --network $NETWORK \
-  --source $SOURCE_ACCOUNT \
+  --source-account $SOURCE_ACCOUNT \
   -- \
   init \
   --wasm_hash "$WASM_HASH"

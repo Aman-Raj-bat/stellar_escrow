@@ -9,6 +9,10 @@ import { Dashboard } from './pages/Dashboard';
 import { CreateEscrow } from './pages/CreateEscrow';
 import { EscrowDetail } from './pages/EscrowDetail';
 
+import { HowItWorks } from './pages/HowItWorks';
+import { Docs } from './pages/Docs';
+import { About } from './pages/About';
+
 export const App: React.FC = () => {
   return (
     <ErrorBoundary>
@@ -20,6 +24,9 @@ export const App: React.FC = () => {
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="escrow/create" element={<CreateEscrow />} />
               <Route path="escrow/:id" element={<EscrowDetail />} />
+              <Route path="how-it-works" element={<HowItWorks />} />
+              <Route path="docs" element={<Docs />} />
+              <Route path="about" element={<About />} />
             </Route>
           </Routes>
         </BrowserRouter>
