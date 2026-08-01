@@ -17,9 +17,9 @@ export const AlertMessage: React.FC<AlertMessageProps> = ({
   if (!message) return null;
 
   const styles = {
-    error: 'bg-red-50 border-red-100 text-red-600',
-    success: 'bg-emerald-50 border-emerald-100 text-emerald-700',
-    info: 'bg-indigo-50 border-indigo-100 text-indigo-700'
+    error: 'bg-red-500/10 border-red-500/20 text-red-400',
+    success: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400',
+    info: 'bg-[#08B5E5]/10 border-[#08B5E5]/20 text-[#08B5E5]'
   };
 
   const icons = {
